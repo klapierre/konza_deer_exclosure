@@ -12,21 +12,25 @@ library(vegan)
 #install.packages("ggplot2")
 library(ggplot2)
 library(grid)
+#install.packages("devtools")
+library(devtools)
+#take this library from github called codyn that is still being developed and load it into R
+install_github("NCEAS/codyn",ref=github_pull(83))
+library(codyn)
 #install.packages("tidyverse")
 library(tidyverse)
 
 #Set ggplot2 theme to black and white
 theme_set(theme_bw())
-#Update ggplot2 theme - make box around the x-axis title size 20, vertically justify x-axis title to 0.35, Place a margin of 15 around the x-axis title.  Make the x-axis title size 16. For y-axis title, make the box size 20, put the writing at a 90 degree angle, and vertically justify the title to 0.5.  Add a margin of 15 and make the y-axis text size 16. Make the plot title size 24 and vertically justify it to 2.  Do not add any grid lines.  Do not add a legend title, and make the legend size 20
-theme_update(axis.title.x=element_text(size=20, vjust=-0.35, margin=margin(t=15)),
-             axis.text.x=element_text(size=16), axis.title.y=element_text(size=20, angle=90, vjust=0.5,
-                                                                          margin=margin(r=15)), axis.text.y=element_text(size=16), plot.title =
-               element_text(size=24, vjust=2), panel.grid.major=element_blank(),
+#Update ggplot2 theme - make box around the x-axis title size 30, vertically justify x-axis title to 0.35, Place a margin of 15 around the x-axis title.  Make the x-axis title size 30. For y-axis title, make the box size 30, put the writing at a 90 degree angle, and vertically justify the title to 0.5.  Add a margin of 15 and make the y-axis text size 25. Make the plot title size 30 and vertically justify it to 2.  Do not add any grid lines.  Do not add a legend title, and make the legend size 20
+theme_update(axis.title.x=element_text(size=30, vjust=-0.35, margin=margin(t=15)),
+             axis.text.x=element_text(size=30), axis.title.y=element_text(size=30, angle=90, vjust=0.5,
+                                                                          margin=margin(r=15)), axis.text.y=element_text(size=30), plot.title =
+               element_text(size=30, vjust=2), panel.grid.major=element_blank(),
              panel.grid.minor=element_blank(), legend.title=element_blank(),
-             legend.text=element_text(size=20))
+             legend.text=element_text(size=30))
 
-
-###Read in all data and join data frames###
+ ###Read in all data and join data frames###
 
 
 #Read in Deer_Removal_Resampling_2017.csv from working directory
@@ -53,7 +57,6 @@ Deer_Exclosure_Spp_Name<-Deer_Exclosure_Resampling_Data%>%
   mutate(taxa=ifelse(sppnum==786,"euphorbia spp", ifelse(sppnum==900,"elymus elymoides", ifelse(sppnum==999, "callirhoe involucrata", ifelse(sppnum==992, "ceanothus herbaceus", ifelse(sppnum==990, "cornus drummondii", ifelse(sppnum==165, "cyperus spp", ifelse(sppnum==900, "elymus elymoides", ifelse(sppnum==996, "elymus elymoides",ifelse(sppnum==991, "eupatorium altissimum", ifelse(sppnum==86, "kuhnia eupatorioides", ifelse(sppnum==995,"ratibida columnifera", ifelse(sppnum==997,"rhus glabra", ifelse(sppnum==980,"salvia azurea",ifelse(sppnum==993,"verbena stricta", ifelse(sppnum==3,"schizachyrium scoparium", ifelse(sppnum==998,"kuhnia eupatorioides",taxa)))))))))))))))))
 
 
-### Whole Plot Speices Richness ###
 
 
 #Make a new data table and place the data from "Deer_Exclosure_Spp_Name" in it
@@ -65,7 +68,7 @@ Extra_Species_Identity<-Deer_Exclosure_Spp_Name%>%
   #Make a new coulmn named "Species_Presence" and place a 1 in every cell so that a wide table can be made later
   mutate(Species_Presence=1)
   
-#Make a new data frame from "Extra_Species_Identity" to generate richness values for each plot
+#Make a new data frame from "Extra_Species_Identity" to generate richness values for each research area
 Extra_Species_Richness<-Extra_Species_Identity%>%  
   #group data frame by Watershed and exclosure
   group_by(Watershed,exclosure)%>%
@@ -77,8 +80,8 @@ Extra_Species_Richness<-Extra_Species_Identity%>%
   mutate(Treatment=paste(Watershed,exclosure,sep="."))
 
 
-#T-test comparing whole plot level species richness across exclosure treatments, using watersheds as replicates
-pairwise.t.test(Extra_Species_Richness$Richness, Extra_Species_Richness$exclosure)
+#T-test comparing research area level species richness across exclosure treatments, using watersheds as replicates
+t.test(Extra_Species_Richness$Richness~Extra_Species_Richness$exclosure)
 
 #Make a new data table using data from "Extra_Species_Richness" to generate Figure 4.
 Extra_Species_Richness_Summary<-Extra_Species_Richness%>%
@@ -105,7 +108,7 @@ ggplot(Extra_Species_Richness_Summary,aes(x=exclosure,y=Richness_Mean))+
   theme(legend.position=c(0.090,0.92))+
   #Make the legend 0.4 x 0.4 inches
   guides(fill=guide_legend(keywidth=0.4,keyheight=0.4,default.unit="inch"))
-#Save at the graph at 1500x1000
+#Save at the graph at 1400x1500
 
 ##Supplementary Table 1 - Make a new data table called "Species_Table" using data from "Extra_Species_Richness"
 Species_Table <- Extra_Species_Identity %>%
@@ -123,14 +126,14 @@ Species_Table <- Extra_Species_Identity %>%
 write.csv(Species_Table, file = "Species_Table.csv")
 
 
-###Subplot Species Richness and Evenness###
+###Plot Level Species Richness and Evenness###
 
 
 ##Calculate Relative Cover##
 
 #Calculate Total Cover and put it into a new data tabel named "Total_Cover"
 Total_Cover<-Deer_Exclosure_Spp_Name%>%
-  #filter out all data where plot = 999 (this will filter out extra whole plot level species data)
+  #filter out all data where plot = 999 (this will filter out extra research area level species data)
   filter(plot!=999)%>%
   #group by "Watershed" and "plot"
   group_by(Watershed,plot)%>%
@@ -139,10 +142,11 @@ Total_Cover<-Deer_Exclosure_Spp_Name%>%
 
 #Calculate Relative Cover - make a new file named Relative_Cover using the data from Deer_Exclosure_Spp_Name
 Relative_Cover<-Deer_Exclosure_Spp_Name%>%
-  #Filter out all data where plot = 999 (this will filter out extra whole plot level species data)
+  #Filter out all data where plot = 999 (this will filter out extra research area level species data)
   filter(plot!=999)%>%
   #Make a new column named "Treatment" and paste "Watershed" and "exclosure" together, separating them by a period.
-  mutate(Treatment=paste(Watershed,exclosure,sep="."))%>%
+  mutate(Treatment=paste(Watershed,exclosure,sep="_"))%>%
+  mutate(Plot_number=paste(Treatment,plot,sep = "_"))%>%
   #Add Total_Cover data into the Relative_Cover data sheet
   left_join(Total_Cover)%>%
   #In the data sheet Relative_Cover, add a new column called "Relative_Cover", in which you divide "cover" by "Total_Cover"
@@ -164,59 +168,38 @@ Species_Richness<-Relative_Cover%>%
   #stop grouping by watershed and plot
   ungroup()
 
-#Make a new data table called Wide_Relative_Cover using data from Relative_Cover
+#Make a new data frame called Wide_Relative_Cover using data from Relative_Cover
 Wide_Relative_Cover<-Relative_Cover%>%
   #Keep only the columns taxa, Relative_Cover, Watershed, plot, and exclosure
   select(taxa,Relative_Cover,Watershed,plot,exclosure)%>%
   #Make a wide table using column taxa as overarching columns, fill with values from Relative_Cover column, if there is no value for one cell, insert a zero
   spread(key=taxa,value=Relative_Cover, fill=0)
 
+##EQ - Evenness Quotient##
 
-##Shannon's Diversity##
+#Make a new data frame called Community_Metrics and run the Evenness Quotient on the Relative_Cover data
+Community_Metrics<-community_structure(Relative_Cover,replicate.var = "Plot_number",abundance.var = "Relative_Cover",metric = "EQ")%>%
+  #Separate out Plot_number into three separate columns
+  separate(Plot_number,c("Watershed","exclosure","plot"), sep = "_")
 
-#Make a data frame called Shannons_Diversity and calculate the diversity using shannon's diversity index from the data frame Wide_Relative_Cover, columns 4 through 49 (diversity information)
-Shannons_Diversity<-as.data.frame(diversity(Wide_Relative_Cover[,4:49],"shannon"))
-Shannons_Diversity<-as.data.frame(diversity(Wide_Relative_Cover[,4:49],"shannon"))%>%
-  #Add the data from Wide_Relative_Cover onto Shannons_Diversity, assuming the current order is correct (binds without changing orders)
-  cbind(Wide_Relative_Cover)%>%
-  #Make a new column called Shannons_Diversity, and imput the data from column 1 of the Shannons_Diversity data frame
-  mutate(Shannons_Diversity=Shannons_Diversity[,1])%>%
-  #keep only the columns Shannons_Diversity, plot, and Watershed
-  select(Shannons_Diversity,plot,Watershed)
-
-
-##Pielou's Evenness##
-
-#Make a new data frame called Treatment Type using data from columns 2,3, and 9 in the Relative_Cover data frame (plot, exclosure, and watershed)
-Treatment_Type<-Relative_Cover[,c(1,2,8)]%>%
-  #remove all non-unique rows
-  unique()
-
-#Make a new table with Shannons Diversity  
-Diversity<-Shannons_Diversity%>%
-  #Join on the Species Richness dataframe 
-  left_join(Species_Richness)%>%
-  #Make a new column named "Pielou" and divide "Shannons_Diversity" by the log of "Richness" in order to calculate Pielou's evenness
-  mutate(Pielou=Shannons_Diversity/log(Richness))%>%
-  #Add on the Treatment_Type datatable
-  left_join(Treatment_Type)
 
 ##Run ANOVA##
 
 #Make a new model output named Richness_ANOVA and run an ANOVA - Richness (dependent/response variable), against watershed and exclosure (independent/explanitory variables), *run individually and together to determine an interaction
-summary(Richness_ANOVA<-aov(Richness~Watershed*exclosure,data=Diversity))
+summary(Richness_ANOVA<-aov(richness~Watershed*exclosure,data=Community_Metrics))
 #Run a t-test comparing "Richness" and "Watershed" because ANOVA results were significant
-pairwise.t.test(Diversity$Richness, Diversity$Watershed)
-summary(J_ANOVA<-aov(Pielou~Watershed*exclosure,data=Diversity))
+pairwise.t.test(Community_Metrics$richness, Community_Metrics$Watershed)
+summary(EQ_ANOVA<-aov(EQ~Watershed*exclosure,data=Community_Metrics))
+pairwise.t.test(Community_Metrics$EQ, Community_Metrics$Watershed)
 
 #Make a new dataframe to generate Figure 2 called Diversity_Summary using data from Diversity
-Diversity_Summary<-Diversity%>%
+Diversity_Summary<-Community_Metrics%>%
   #group by watershed and exclosure
   group_by(Watershed,exclosure)%>%
-  #In new columns, calculate the standard deviation, mean, and length of Species Richness and Pielou's evenness  
-  summarize(Richness_Std=sd(Richness),Richness_Mean=mean(Richness), Richness_n=length(Richness), J_Std=sd(Pielou), J_Mean=mean(Pielou), J_n=length(Pielou))%>%
-  #Make a new column and calculate the Standard Error for Species Richness and Pielou's evenness
-mutate(Richness_St_Error=Richness_Std/sqrt(Richness_n), J_St_Error=J_Std/sqrt(J_n))
+  #In new columns, calculate the standard deviation, mean, and length of Species Richness and EQ  
+  summarize(Richness_Std=sd(richness),Richness_Mean=mean(richness), Richness_n=length(richness), EQ_Std=sd(EQ), EQ_Mean=mean(EQ), EQ_n=length(EQ))%>%
+  #Make a new column and calculate the Standard Error for Species Richness and EQ
+mutate(Richness_St_Error=Richness_Std/sqrt(Richness_n), EQ_St_Error=EQ_Std/sqrt(EQ_n))
 
 ##Figure 2 - Make a bar graph of species richness and evenness##
 
@@ -224,7 +207,7 @@ mutate(Richness_St_Error=Richness_Std/sqrt(Richness_n), J_St_Error=J_Std/sqrt(J_
 Species_Richness_Plot<-ggplot(Diversity_Summary,aes(x=Watershed,y=Richness_Mean,fill=exclosure))+
   #Make a bar graph where the height of the bars is equal to the data (stat=identity) and you preserve the vertical position while adjusting the horizontal(position_dodge), and outline the bars with the color black.
   geom_bar(stat="identity", position=position_dodge(),color="black")+
-  #make error bars using the Standard error from the mean and place them at 0.9 with a width of 0.2   
+  #make error bars using the Standard error from the mean and place them at 0.9 with a width of 0.2
   geom_errorbar(aes(ymin=Richness_Mean-Richness_St_Error,ymax=Richness_Mean+Richness_St_Error),position=position_dodge(0.9),width=0.2)+
   #Label the x-axis "Watershed"
   xlab("Watershed")+
@@ -234,49 +217,55 @@ Species_Richness_Plot<-ggplot(Diversity_Summary,aes(x=Watershed,y=Richness_Mean,
   scale_fill_manual(values=c("grey","white"), labels=c("Inside Fence","Outside Fence"))+
   #Make the y-axis expand to 20
   expand_limits(y=20)+
-  #Place the legend at 0.8,0.94
-  theme(legend.position=c(0.8,0.94))+
+  #Place the legend at 0.8,0.94 and space it out by 3 lines
+  theme(legend.position=c(0.75,0.94), legend.key.size = unit(2.0, 'lines'))+
   #Add "a." to the graph in size 10 at position 0.6,20
-annotate("text",x=0.6,y=20,label="a.",size=10)+
+annotate("text",x=0.6,y=20,label="a.",size=15)+
   #Add "A" to the graph in size 6 at position 1,17
-annotate("text",x=1,y=17,label="A",size=6)+
+annotate("text",x=1,y=17,label="A",size=10)+
   #Add "B" to the graph in size 6 at position 2,13.5
-annotate("text",x=2,y=13.5,label="B",size=6)+
+annotate("text",x=2,y=13.5,label="B",size=10)+
   #Add "A" to the graph in size 6 at position 3,17.5
-annotate("text",x=3,y=17.5,label="A",size=6)
+annotate("text",x=3,y=17.5,label="A",size=10)
 
-#Figure 2b - Make a dataframe called Pielous_Evenness_Plot using ggplot2.  Use data from Diversity summary, with the x-axis being Watershed, and the y-axis being J_Mean, the bars should be based on exclosures
-Pielous_Evenness_Plot<-ggplot(Diversity_Summary,aes(x=Watershed,y=J_Mean,fill=exclosure))+
+#Figure 2b - Make a dataframe called EQ_Plot using ggplot2.  Use data from Diversity summary, with the x-axis being Watershed, and the y-axis being EQ_Mean, the bars should be based on exclosures
+EQ_Plot<-ggplot(Diversity_Summary,aes(x=Watershed,y=EQ_Mean,fill=exclosure))+
   ##Make a bar graph where the height of the bars is equal to the data (stat=identity) and you preserve the vertical position while adjusting the horizontal(position_dodge), and outline the bars with the color black.
   geom_bar(stat="identity", position=position_dodge(),color="black")+
   #Make error bars using the standard error from the mean.  Position them at 0.9 with a width of 0.2  
-  geom_errorbar(aes(ymin=J_Mean-J_St_Error,ymax=J_Mean+J_St_Error),position=position_dodge(0.9),width=0.2)+
+  geom_errorbar(aes(ymin=EQ_Mean-EQ_St_Error,ymax=EQ_Mean+EQ_St_Error),position=position_dodge(0.9),width=0.2)+
   #Label the x-axis "Watershed"
   xlab("Watershed")+
-  #Label the y-axis "Pielou's Evenness"
-  ylab("Pielou's Evenness")+
+  #Label the y-axis "Evenness Quotient"
+  ylab("Evenness Quotient")+
   #Fill the bars with grey and white and label them "Inside Fence" and "Outside Fence"
   scale_fill_manual(values=c("grey","white"), labels=c("Inside Fence","Outside Fence"))+
   #do not include a legend
   theme(legend.position="none")+
   #Expand the y-axis to 1.0
-  expand_limits(y=1.0)+
+  expand_limits(y=0.20)+
   #add text "a." at 0.6,1.0 in size 10
-  annotate("text",x=0.6,y=1.0,label="b.",size=10)
+  annotate("text",x=0.6,y=0.20,label="b.",size=15)+
+  #Add "A" to the graph in size 6 at position 1,17
+  annotate("text",x=1,y=0.17,label="A",size=10)+
+  #Add "B" to the graph in size 6 at position 2,13.5
+  annotate("text",x=2,y=0.158,label="B",size=10)+
+  #Add "A" to the graph in size 6 at position 3,17.5
+  annotate("text",x=3,y=0.163,label="AB",size=10)
 
 #Figure 2 - Make a figure that has one row and two columns for two graphs
 pushViewport(viewport(layout=grid.layout(1,2)))
 #print out the viewport plot where the Species_Richness_plot is at position 1,1
 print(Species_Richness_Plot,vp=viewport(layout.pos.row=1, layout.pos.col =1))
 #print out the viewport plot where the Species_Richness_plot is at position 1,2
-print(Pielous_Evenness_Plot,vp=viewport(layout.pos.row=1, layout.pos.col =2))
-#Save at 1500 x 700  
+print(EQ_Plot,vp=viewport(layout.pos.row=1, layout.pos.col =2))
+#Save at 1800 x 1000  
 
 
 ### Figure 4 - Rank Abundance Curves ###
 
 
-#Make a new data table called RAC_Mean using data from Relative_Cover - the mean is being taken across all subplots for ease of comparison
+#Make a new data table called RAC_Mean using data from Relative_Cover - the mean is being taken across all plots for ease of comparison
 RAC_Mean<-Relative_Cover%>%
   #Group by Treatment and taxa
   group_by(Treatment,taxa)%>%
@@ -304,13 +293,13 @@ ggplot(RAC_Mean,aes(x=Ranks,y=Mean))+
   #Make a line graph
   geom_line()+
   #when making the points in the line graph, change the symbols to be equal to the "Symbol" column and make them a size 3
-  geom_point(shape=RAC_Mean$Symbol, size=3)+
+  geom_point(shape=RAC_Mean$Symbol, size=4)+
   #Label the x-axis "Species Rank"
   xlab("Species Rank")+
   #Label the y-axis "Relative Abundance (%)"
   ylab("Relative Abundance (%)")+
   #Change the theme so that the boarders and backgrounds are white and the x- and y-axis text size is 24
-  theme(strip.background = element_rect(color="white",fill="white"),strip.text.x = element_text(size=24), strip.text.y = element_text(size=24))+
+  theme(strip.background = element_rect(color="white",fill="white"),strip.text.x = element_text(size=28), strip.text.y = element_text(size=28))+
   #Makes a matrix of panels defined by row and column facetting variables (Watershed and Treatmnet_Type)
   facet_grid(Watershed~Treatment_Type)
 #save at 1500 x 933
@@ -320,10 +309,10 @@ ggplot(RAC_Mean,aes(x=Ranks,y=Mean))+
 
 
 #Update the theme so that legends will have titles (all else is the same as above)
-theme_update(axis.title.x=element_text(size=25, vjust=-0.35, margin=margin(t=15)), axis.text.x=element_text(size=16),
-             axis.title.y=element_text(size=25, angle=90, vjust=0.5, margin=margin(r=15)), axis.text.y=element_text(size=16),
-             plot.title = element_text(size=24, vjust=2),
-             panel.grid.major=element_blank(), panel.grid.minor=element_blank(), legend.text=element_text(size=20))
+theme_update(axis.title.x=element_text(size=30, vjust=-0.35, margin=margin(t=15)), axis.text.x=element_text(size=30),
+             axis.title.y=element_text(size=30, angle=90, vjust=0.5, margin=margin(r=15)), axis.text.y=element_text(size=30),
+             plot.title = element_text(size=30, vjust=2),
+             panel.grid.major=element_blank(), panel.grid.minor=element_blank(), legend.text=element_text(size=25))
 
 #Figure 1
 #Make new data frame called BC_Data and run an NMDS using data from Wide_Relative_Cover, columns 4 through 49
@@ -371,8 +360,8 @@ ggplot(data = BC_NMDS_Graph, aes(MDS1,MDS2, shape = group))+
   scale_shape_discrete(name="Watershed")+
   #Use the data from BC_Ellipses to make ellipses that are size 1 with a solid line
   geom_path(data = BC_Ellipses, aes(x=NMDS1, y=NMDS2), size=1, linetype=1)+
-  #make the text size of the legend titles 24 
-  theme(legend.title = element_text(size=24))+
+  #make the text size of the legend titles 30
+  theme(legend.title = element_text(size=28),  legend.key.size = unit(2.0, 'lines'))+
   #Add annotations of K1B, 4B, and K4A inside the elipses and bold them
   annotate("text",x=-.16,y=0.27,label="K1B",size=10, fontface="bold")+
   annotate("text",x=0.04,y=-0.09,label="4B",size=10, fontface="bold")+
