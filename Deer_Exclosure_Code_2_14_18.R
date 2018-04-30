@@ -57,6 +57,7 @@ Deer_Exclosure_Spp_Name<-Deer_Exclosure_Resampling_Data%>%
   mutate(taxa=ifelse(sppnum==786,"euphorbia spp", ifelse(sppnum==900,"elymus elymoides", ifelse(sppnum==999, "callirhoe involucrata", ifelse(sppnum==992, "ceanothus herbaceus", ifelse(sppnum==990, "cornus drummondii", ifelse(sppnum==165, "cyperus spp", ifelse(sppnum==900, "elymus elymoides", ifelse(sppnum==996, "elymus elymoides",ifelse(sppnum==991, "eupatorium altissimum", ifelse(sppnum==86, "kuhnia eupatorioides", ifelse(sppnum==995,"ratibida columnifera", ifelse(sppnum==997,"rhus glabra", ifelse(sppnum==980,"salvia azurea",ifelse(sppnum==993,"verbena stricta", ifelse(sppnum==3,"schizachyrium scoparium", ifelse(sppnum==998,"kuhnia eupatorioides",taxa)))))))))))))))))
 
 
+### 30 x 30 m Research Area Speices Richness ###
 
 
 #Make a new data table and place the data from "Deer_Exclosure_Spp_Name" in it
