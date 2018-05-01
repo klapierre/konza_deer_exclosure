@@ -93,7 +93,7 @@ Extra_Species_Richness_Summary<-Extra_Species_Richness%>%
   #Make a new column called "Richness_St_Error" and divide "Richness_Std" by the square root of "Richness_n"
   mutate(Richness_St_Error=Richness_Std/sqrt(Richness_n))
 
-##Figure 4 - Make a bar graph using ggplot2.  Use data from "Extra_Species_Diversity_Summary".  Change the aesthetics x is equal to the data from "exlosure", and y is equal to the "Richness_Mean"
+##Figure 3 - Make a bar graph using ggplot2.  Use data from "Extra_Species_Diversity_Summary".  Change the aesthetics x is equal to the data from "exlosure", and y is equal to the "Richness_Mean"
 ggplot(Extra_Species_Richness_Summary,aes(x=exclosure,y=Richness_Mean))+
   #Make a bar graph where the height of the bars is equal to the data (stat=identity) and you preserve the vertical position while adjusting the horizontal(position_dodge), and fill in the bars with the color grey.  
   geom_bar(stat="identity", position=position_dodge(),fill="grey")+
@@ -103,12 +103,9 @@ ggplot(Extra_Species_Richness_Summary,aes(x=exclosure,y=Richness_Mean))+
   xlab("Treatment")+
   #Label the y-axis "Species Richness"
   ylab("Species Richness")+
+  scale_x_discrete(labels=c("inside"="Inside Fence","outside"="Outside Fence"))+
   #Make the y-axis extend to 50
-  expand_limits(y=50)+
-  #Place the legend at 0.09,0.92
-  theme(legend.position=c(0.090,0.92))+
-  #Make the legend 0.4 x 0.4 inches
-  guides(fill=guide_legend(keywidth=0.4,keyheight=0.4,default.unit="inch"))
+  expand_limits(y=50)
 #Save at the graph at 1400x1500
 
 ##Supplementary Table 1 - Make a new data table called "Species_Table" using data from "Extra_Species_Richness"

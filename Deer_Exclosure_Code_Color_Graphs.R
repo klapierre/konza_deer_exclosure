@@ -93,22 +93,20 @@ Extra_Species_Richness_Summary<-Extra_Species_Richness%>%
   mutate(Richness_St_Error=Richness_Std/sqrt(Richness_n))
 
 ##Figure 3 - Make a bar graph using ggplot2.  Use data from "Extra_Species_Diversity_Summary".  Change the aesthetics x is equal to the data from "exlosure", and y is equal to the "Richness_Mean"
-ggplot(Extra_Species_Richness_Summary,aes(x=exclosure,y=Richness_Mean,fill=exclosure))+
+ggplot(Extra_Species_Richness_Summary,aes(x=exclosure,y=Richness_Mean, fill=exclosure))+
   #Make a bar graph where the height of the bars is equal to the data (stat=identity) and you preserve the vertical position while adjusting the horizontal(position_dodge), and fill in the bars with the color grey.  
   geom_bar(stat="identity", position=position_dodge())+
   #Make an error bar that represents the standard error within the data and place the error bars at position 0.9 and make them 0.2 wide.
   geom_errorbar(aes(ymin=Richness_Mean-Richness_St_Error,ymax=Richness_Mean+Richness_St_Error),position=position_dodge(0.9),width=0.2)+
-  scale_fill_manual(values=c("thistle3","slateblue4"))+
+  scale_fill_manual(values=c("lightskyblue2","dodgerblue4"))+
   #Label the x-axis "Treatment"
   xlab("Treatment")+
   #Label the y-axis "Species Richness"
   ylab("Species Richness")+
+  scale_x_discrete(labels=c("inside"="Inside Fence","outside"="Outside Fence"))+
   #Make the y-axis extend to 50
   expand_limits(y=50)+
-  #Place the legend at 0.09,0.92
-  theme(legend.position=c(0.090,0.92))+
-  #Make the legend 0.4 x 0.4 inches
-  guides(fill=guide_legend(keywidth=0.4,keyheight=0.4,default.unit="inch"))
+  theme(legend.position = "none")
 #Save at the graph at 1400x1500
 
 ##Supplementary Table 1 - Make a new data table called "Species_Table" using data from "Extra_Species_Richness"
@@ -215,7 +213,7 @@ Species_Richness_Plot<-ggplot(Diversity_Summary,aes(x=Watershed,y=Richness_Mean,
   #Label the y-axis "Species Richness"
   ylab("Species Richness")+
   #Fill the bar graphs with colors and label them "Inside Fence" and "Outside Fence"
-  scale_fill_manual(values=c("thistle3","slateblue4"), labels=c("Inside Fence","Outside Fence"))+
+  scale_fill_manual(values=c("lightskyblue2","dodgerblue4"), labels=c("Inside Fence","Outside Fence"))+
   #Make the y-axis expand to 20
   expand_limits(y=20)+
   #Place the legend at 0.8,0.94 and space it out by 3 lines
@@ -240,7 +238,7 @@ EQ_Plot<-ggplot(Diversity_Summary,aes(x=Watershed,y=EQ_Mean,fill=exclosure))+
   #Label the y-axis "Evenness Quotient"
   ylab("Evenness Quotient")+
   #Fill the bars with grey and white and label them "Inside Fence" and "Outside Fence"
-  scale_fill_manual(values=c("thistle3","slateblue4"), labels=c("Inside Fence","Outside Fence"))+
+  scale_fill_manual(values=c("lightskyblue2","dodgerblue4"), labels=c("Inside Fence","Outside Fence"))+
   #do not include a legend
   theme(legend.position="none")+
   #Expand the y-axis to 1.0
@@ -354,7 +352,7 @@ ggplot(data = BC_NMDS_Graph, aes(MDS1,MDS2, shape = group))+
   geom_point(size=5, aes(color = exclosure)) +
   #Make "inside" and "outside" dark grey and back and label them "Inside Fence", "Outside Fence".  Label this legend "Treatment"
   scale_color_manual(breaks=c("inside","outside"),
-                     values = c("thistle3","slateblue4"),
+                     values = c("lightskyblue2","dodgerblue4"),
                      labels=c("Inside Fence", "Outside Fence"),
                      name="Treatment")+
   #Use different shapes according to Watershed types
@@ -362,7 +360,7 @@ ggplot(data = BC_NMDS_Graph, aes(MDS1,MDS2, shape = group))+
   #Use the data from BC_Ellipses to make ellipses that are size 1 with a solid line
   geom_path(data = BC_Ellipses, aes(x=NMDS1, y=NMDS2), size=1, linetype=1)+
   #make the text size of the legend titles 28
-  theme(legend.title = element_text(size=28),  legend.key.size = unit(2.0, 'lines'))+
+  theme(legend.title = element_text(size=28),  legend.key.size = unit(2.0, 'lines'), legend.position = c(0.89,0.81))+
   #Add annotations of K1B, 4B, and K4A inside the elipses and bold them
   annotate("text",x=-.16,y=0.27,label="K1B",size=10, fontface="bold")+
   annotate("text",x=0.04,y=-0.09,label="4B",size=10, fontface="bold")+
