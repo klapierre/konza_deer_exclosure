@@ -98,7 +98,7 @@ ggplot(Extra_Species_Richness_Summary,aes(x=exclosure,y=Richness_Mean, fill=excl
   geom_bar(stat="identity", position=position_dodge())+
   #Make an error bar that represents the standard error within the data and place the error bars at position 0.9 and make them 0.2 wide.
   geom_errorbar(aes(ymin=Richness_Mean-Richness_St_Error,ymax=Richness_Mean+Richness_St_Error),position=position_dodge(0.9),width=0.2)+
-  scale_fill_manual(values=c("lightskyblue2","dodgerblue4"))+
+  scale_fill_manual(values=c("lightcyan3","cadetblue4"))+
   #Label the x-axis "Treatment"
   xlab("Treatment")+
   #Label the y-axis "Species Richness"
@@ -107,7 +107,7 @@ ggplot(Extra_Species_Richness_Summary,aes(x=exclosure,y=Richness_Mean, fill=excl
   #Make the y-axis extend to 50
   expand_limits(y=50)+
   theme(legend.position = "none")
-#Save at the graph at 1400x1500
+#Save at the graph at 700x900
 
 ##Supplementary Table 1 - Make a new data table called "Species_Table" using data from "Extra_Species_Richness"
 Species_Table <- Extra_Species_Identity %>%
@@ -213,11 +213,11 @@ Species_Richness_Plot<-ggplot(Diversity_Summary,aes(x=Watershed,y=Richness_Mean,
   #Label the y-axis "Species Richness"
   ylab("Species Richness")+
   #Fill the bar graphs with colors and label them "Inside Fence" and "Outside Fence"
-  scale_fill_manual(values=c("lightskyblue2","dodgerblue4"), labels=c("Inside Fence","Outside Fence"))+
+  scale_fill_manual(values=c("lightcyan3","cadetblue4"), labels=c("Inside Fence","Outside Fence"))+
   #Make the y-axis expand to 20
   expand_limits(y=20)+
   #Place the legend at 0.8,0.94 and space it out by 3 lines
-  theme(legend.position=c(0.75,0.94), legend.key.size = unit(2.0, 'lines'))+
+  theme(legend.position=c(0.75,0.935), legend.key.size = unit(2.0, 'lines'))+
   #Add "a." to the graph in size 10 at position 0.6,20
   annotate("text",x=0.6,y=20,label="a.",size=15)+
   #Add "A" to the graph in size 6 at position 1,17
@@ -238,7 +238,7 @@ EQ_Plot<-ggplot(Diversity_Summary,aes(x=Watershed,y=EQ_Mean,fill=exclosure))+
   #Label the y-axis "Evenness Quotient"
   ylab("Evenness Quotient")+
   #Fill the bars with grey and white and label them "Inside Fence" and "Outside Fence"
-  scale_fill_manual(values=c("lightskyblue2","dodgerblue4"), labels=c("Inside Fence","Outside Fence"))+
+  scale_fill_manual(values=c("lightcyan3","cadetblue4"), labels=c("Inside Fence","Outside Fence"))+
   #do not include a legend
   theme(legend.position="none")+
   #Expand the y-axis to 1.0
@@ -292,7 +292,7 @@ ggplot(RAC_Mean,aes(x=Ranks,y=Mean))+
   #Make a line graph
   geom_line()+
   #when making the points in the line graph, change the symbols to be equal to the "Symbol" column and make them a size 3
-  geom_point(shape=RAC_Mean$Symbol, size=4)+
+  geom_point(shape=RAC_Mean$Symbol, size=5)+
   #Label the x-axis "Species Rank"
   xlab("Species Rank")+
   #Label the y-axis "Relative Abundance (%)"
@@ -302,8 +302,6 @@ ggplot(RAC_Mean,aes(x=Ranks,y=Mean))+
   #Makes a matrix of panels defined by row and column facetting variables (Watershed and Treatmnet_Type)
   facet_grid(Watershed~Treatment_Type)
 #save at 1500 x 933
-
-
 ### Bray-Curtis NMDS ###
 
 
@@ -349,10 +347,10 @@ for(g in levels(BC_NMDS$group)){
 #Plot the data from BC_NMDS_Graph, where x=MDS1 and y=MDS2, make an ellipse based on "group"
 ggplot(data = BC_NMDS_Graph, aes(MDS1,MDS2, shape = group))+
   #make a point graph where the points are size 5.  Color them based on exlosure
-  geom_point(size=5, aes(color = exclosure)) +
+  geom_point(size=6, aes(color = exclosure)) +
   #Make "inside" and "outside" dark grey and back and label them "Inside Fence", "Outside Fence".  Label this legend "Treatment"
   scale_color_manual(breaks=c("inside","outside"),
-                     values = c("lightskyblue2","dodgerblue4"),
+                     values = c("lightcyan3","cadetblue4"),
                      labels=c("Inside Fence", "Outside Fence"),
                      name="Treatment")+
   #Use different shapes according to Watershed types

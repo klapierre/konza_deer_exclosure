@@ -3,20 +3,22 @@
 ###Set all general necessities###
 
 #Set working directory 
-setwd("/Users/kathrynbloodworth/Documents/SERC/Projects/Deer_Exclosure")
+setwd("/Users/kathrynbloodworth/Dropbox (Smithsonian)/Konza/herbivore_removal_plots/deer exclosure resampling/Deer_Exclosure_Resampling_Data")
 
 #Load and install libraries
 library(MASS)
 #install.packages("vegan")
 library(vegan)
-#install.packages("ggplot2")
-library(ggplot2)
 library(grid)
 #install.packages("devtools")
 library(devtools)
-#take this library from github called codyn that is still being developed and load it into R
-install_github("NCEAS/codyn",ref=github_pull(83))
+#install.packages("codyn")
 library(codyn)
+library(lme4)
+#install.packages("nlme")
+library(nlme)
+#install.packages("lmerTest")
+library(lmerTest)
 #install.packages("tidyverse")
 library(tidyverse)
 
@@ -30,7 +32,7 @@ theme_update(axis.title.x=element_text(size=30, vjust=-0.35, margin=margin(t=15)
              panel.grid.minor=element_blank(), legend.title=element_blank(),
              legend.text=element_text(size=30))
 
- ###Read in all data and join data frames###
+###Read in all data and join data frames###
 
 
 #Read in Deer_Removal_Resampling_2017.csv from working directory
@@ -39,6 +41,7 @@ Deer_Exclosure_Resampling_Data<-read.csv("3_Deer_Removal_Resampling_2017.csv")%>
   mutate(Watershed=ifelse(watershed=="4D","4B", ifelse(watershed=="K1B","K1B", ifelse(watershed=="K4A","K4A", watershed))))%>%
   #Delete the column "watershed"
   select(-watershed)
+  
 
 #Read in konza_spplist.csv from working directory
 Konza_Spplist<-read.csv("konza_spplist.csv")%>%
@@ -46,6 +49,7 @@ Konza_Spplist<-read.csv("konza_spplist.csv")%>%
   mutate(sppnum=spnum)%>%
   #Delete the column "spnum"
   select(-spnum)
+
 
 #Make a new data frame called "Deer_Exclosure_Spp_Name and put the data from "Deer_Exclosure_Resampling_Data" in it
 Deer_Exclosure_Spp_Name<-Deer_Exclosure_Resampling_Data%>%
@@ -68,7 +72,7 @@ Extra_Species_Identity<-Deer_Exclosure_Spp_Name%>%
   unique()%>%
   #Make a new coulmn named "Species_Presence" and place a 1 in every cell so that a wide table can be made later
   mutate(Species_Presence=1)
-  
+
 #Make a new data frame from "Extra_Species_Identity" to generate richness values for each research area
 Extra_Species_Richness<-Extra_Species_Identity%>%  
   #group data frame by Watershed and exclosure
@@ -173,31 +177,78 @@ Wide_Relative_Cover<-Relative_Cover%>%
   #Make a wide table using column taxa as overarching columns, fill with values from Relative_Cover column, if there is no value for one cell, insert a zero
   spread(key=taxa,value=Relative_Cover, fill=0)
 
-##EQ - Evenness Quotient##
+##Evar - Smith and Wilson's Evenness Index##
 
-#Make a new data frame called Community_Metrics and run the Evenness Quotient on the Relative_Cover data
-Community_Metrics<-community_structure(Relative_Cover,replicate.var = "Plot_number",abundance.var = "Relative_Cover",metric = "EQ")%>%
+#Make a new data frame called Community_Metrics and run Evar on the Relative_Cover data
+Community_Metrics<-community_structure(Relative_Cover,replicate.var = "Plot_number",abundance.var = "Relative_Cover")%>%
   #Separate out Plot_number into three separate columns
-  separate(Plot_number,c("Watershed","exclosure","plot"), sep = "_")
+  separate(Plot_number,c("Watershed","exclosure","plot"), sep = "_")%>%
+  mutate(Fire_Regime=ifelse(Watershed%in%c("4B","K4A"),4,1))%>%
+  mutate(Watershed_Numerical=ifelse(Watershed=="4B",100, ifelse(Watershed=="K4A",200,300)))%>%
+  #Make categorical
+  mutate(Plot_Numerical=as.numeric(plot))%>%
+  mutate(Watershed.Plot=Watershed_Numerical+Plot_Numerical)
+  
+#Watershed, exlosure, subplot, and fire regime must all be stored as factors in order to be considered as that - when you store them as numbers R assumes that they are in a specific order (i.e. 2 is inbetween 1 and 3), when you store them as characters R does not know what to do with them -- this is why our code was not working before. 
+Community_Metrics$Watershed_Fact=as.factor(Community_Metrics$Watershed)
+Community_Metrics$exclosure_Fact=as.factor(Community_Metrics$exclosure)
+Community_Metrics$subplot_Fact=as.factor(Community_Metrics$plot)
+Community_Metrics$Fire_Regime_Fact=as.factor(Community_Metrics$Fire_Regime)
+Community_Metrics$Watershed.Plot.Fact=as.factor(Community_Metrics$Watershed.Plot)
+#From the data fram Community_Metrics form a new column named Watershed_Exclosure and insert in the interaction of the Watershed_Fact and exclosure_Fact so that each exclosure within each watershed has a unique identifier
+Community_Metrics$Watershed_Exclosure=interaction(Community_Metrics$Watershed_Fact:Community_Metrics$exclosure_Fact)
+Community_Metrics$Watershed.Plot.Fact_=as.factor(Community_Metrics$Watershed.Plot)
 
+#### Mixed Model #### - incorrect becuase Watershed_Numerical, Plot_Numerical, exlosure, and Fire_Regime are characters not factors
+summary (Mixed_Model_Richness <- lme(richness ~ exclosure + Fire_Regime, random = (~1 | Watershed_Numerical/ Plot_Numerical), data = Community_Metrics))
+summary (Mixed_Model_Evenness <- lme(Evar ~ exclosure + Fire_Regime, random = (~1 | Watershed_Numerical/ Plot_Numerical), data = Community_Metrics))
+
+
+### Mixed Model Practice -- NLME ###
+#give the summary of a new data frame called Mixed_Model_Richness and preform the mixed model function 'lme' from the nlme package using richness, exclosure, and fire regime as fixed effects.  Then use the unique identifier 'Watershed.Plot.Fact and nest it within exclosure and then nest that within watershed as a random effect.  
+summary (Mixed_Model_Richness <- lme(richness ~ exclosure_Fact + Fire_Regime_Fact, random = (~1 | Watershed_Fact/exclosure_Fact), data = Community_Metrics))
+anova(Mixed_Model_Richness)
+
+#LME4
+
+
+#Give the summary of a new data frame called Mixed_Model_Richness and preform the mixed model function"lmer' using richness, exclosure, and fire regime as fixed effects.  Then use exlosure nested within watershed as a random effect.  Then run an anova -- online research suggests that LME4 is better for Generalized Mixed Models and NLME is better for linear mixed models -- Karin uses LME4 almost exclusively, she said that she understands the ins and outs of it better - when we were working on it the other day both the NLME package and the LME4 code come back with similar results, in which Fire regime was significant but exclosure was not.  Today, the code is giving me non-significant responses for the NLME but I havent figured out why yet.
+summary (Mixed_Model_Richness <- lmer(richness ~ exclosure_Fact + Fire_Regime_Fact + (1 | Watershed_Fact/exclosure_Fact), data = Community_Metrics))
+anova(Mixed_Model_Richness)
+
+#Fire regime is now nested within watershed, but the results are exactly the same - fire regime is already being accounted for as a fixed effect
+summary (Mixed_Model_Richness <- lmer(richness ~ exclosure_Fact + Fire_Regime_Fact + (1 | Watershed_Fact/Fire_Regime_Fact/exclosure_Fact), data = Community_Metrics))
+anova(Mixed_Model_Richness)
 
 ##Run ANOVA##
 
 #Make a new model output named Richness_ANOVA and run an ANOVA - Richness (dependent/response variable), against watershed and exclosure (independent/explanitory variables), *run individually and together to determine an interaction
 summary(Richness_ANOVA<-aov(richness~Watershed*exclosure,data=Community_Metrics))
-#Run a t-test comparing "Richness" and "Watershed" because ANOVA results were significant
-pairwise.t.test(Community_Metrics$richness, Community_Metrics$Watershed)
-summary(EQ_ANOVA<-aov(EQ~Watershed*exclosure,data=Community_Metrics))
-pairwise.t.test(Community_Metrics$EQ, Community_Metrics$Watershed)
+#Run a t-test comparing "Richness" and "Watershed" because ANOVA results were significant - Community_Metrics has to be split up so that each data frame only has two points of comparisons
+Community_Metrics_1<-Community_Metrics%>%
+  filter(Watershed!="K1B")
+t.test(Community_Metrics_1$richness~Community_Metrics_1$Watershed)
+Community_Metrics_2<-Community_Metrics%>%
+  filter(Watershed!="K4A")
+t.test(Community_Metrics_2$richness~Community_Metrics_2$Watershed)
+Community_Metrics_3<-Community_Metrics%>%
+  filter(Watershed!="4B")
+t.test(Community_Metrics_3$richness~Community_Metrics_3$Watershed)
+#Make a new model output named EQ_ANOVA and run an ANOVA - EQ (dependent/response variable), against watershed and exclosure (independent/explanitory variables), *run individually and together to determine an interaction
+summary(Evar_ANOVA<-aov(Evar~Watershed*exclosure,data=Community_Metrics))
+#Run a t-test comparing "EQ" and "Watershed" because ANOVA results were significant - Community_Metrics has to be split up so that each data frame only has two points of comparisons
+t.test(Community_Metrics_1$Evar~Community_Metrics_1$Watershed)
+t.test(Community_Metrics_2$Evar~Community_Metrics_2$Watershed)
+t.test(Community_Metrics_3$Evar~Community_Metrics_3$Watershed)
 
 #Make a new dataframe to generate Figure 2 called Diversity_Summary using data from Diversity
 Diversity_Summary<-Community_Metrics%>%
   #group by watershed and exclosure
   group_by(Watershed,exclosure)%>%
   #In new columns, calculate the standard deviation, mean, and length of Species Richness and EQ  
-  summarize(Richness_Std=sd(richness),Richness_Mean=mean(richness), Richness_n=length(richness), EQ_Std=sd(EQ), EQ_Mean=mean(EQ), EQ_n=length(EQ))%>%
+  summarize(Richness_Std=sd(richness),Richness_Mean=mean(richness), Richness_n=length(richness), Evar_Std=sd(Evar), Evar_Mean=mean(Evar), Evar_n=length(Evar))%>%
   #Make a new column and calculate the Standard Error for Species Richness and EQ
-mutate(Richness_St_Error=Richness_Std/sqrt(Richness_n), EQ_St_Error=EQ_Std/sqrt(EQ_n))
+  mutate(Richness_St_Error=Richness_Std/sqrt(Richness_n), Evar_St_Error=Evar_Std/sqrt(Evar_n))
 
 ##Figure 2 - Make a bar graph of species richness and evenness##
 
@@ -218,24 +269,24 @@ Species_Richness_Plot<-ggplot(Diversity_Summary,aes(x=Watershed,y=Richness_Mean,
   #Place the legend at 0.8,0.94 and space it out by 3 lines
   theme(legend.position=c(0.75,0.94), legend.key.size = unit(2.0, 'lines'))+
   #Add "a." to the graph in size 10 at position 0.6,20
-annotate("text",x=0.6,y=20,label="a.",size=15)+
+  annotate("text",x=0.6,y=20,label="a.",size=15)+
   #Add "A" to the graph in size 6 at position 1,17
-annotate("text",x=1,y=17,label="A",size=10)+
+  annotate("text",x=1,y=17,label="A",size=10)+
   #Add "B" to the graph in size 6 at position 2,13.5
-annotate("text",x=2,y=13.5,label="B",size=10)+
+  annotate("text",x=2,y=13.5,label="B",size=10)+
   #Add "A" to the graph in size 6 at position 3,17.5
-annotate("text",x=3,y=17.5,label="A",size=10)
+  annotate("text",x=3,y=17.5,label="A",size=10)
 
 #Figure 2b - Make a dataframe called EQ_Plot using ggplot2.  Use data from Diversity summary, with the x-axis being Watershed, and the y-axis being EQ_Mean, the bars should be based on exclosures
-EQ_Plot<-ggplot(Diversity_Summary,aes(x=Watershed,y=EQ_Mean,fill=exclosure))+
+Evar_Plot<-ggplot(Diversity_Summary,aes(x=Watershed,y=Evar_Mean,fill=exclosure))+
   ##Make a bar graph where the height of the bars is equal to the data (stat=identity) and you preserve the vertical position while adjusting the horizontal(position_dodge), and outline the bars with the color black.
   geom_bar(stat="identity", position=position_dodge(),color="black")+
   #Make error bars using the standard error from the mean.  Position them at 0.9 with a width of 0.2  
-  geom_errorbar(aes(ymin=EQ_Mean-EQ_St_Error,ymax=EQ_Mean+EQ_St_Error),position=position_dodge(0.9),width=0.2)+
+  geom_errorbar(aes(ymin=Evar_Mean-Evar_St_Error,ymax=Evar_Mean+Evar_St_Error),position=position_dodge(0.9),width=0.2)+
   #Label the x-axis "Watershed"
   xlab("Watershed")+
   #Label the y-axis "Evenness Quotient"
-  ylab("Evenness Quotient")+
+  ylab("Evenness Index")+
   #Fill the bars with grey and white and label them "Inside Fence" and "Outside Fence"
   scale_fill_manual(values=c("grey","white"), labels=c("Inside Fence","Outside Fence"))+
   #do not include a legend
@@ -256,7 +307,7 @@ pushViewport(viewport(layout=grid.layout(1,2)))
 #print out the viewport plot where the Species_Richness_plot is at position 1,1
 print(Species_Richness_Plot,vp=viewport(layout.pos.row=1, layout.pos.col =1))
 #print out the viewport plot where the Species_Richness_plot is at position 1,2
-print(EQ_Plot,vp=viewport(layout.pos.row=1, layout.pos.col =2))
+print(Evar_Plot,vp=viewport(layout.pos.row=1, layout.pos.col =2))
 #Save at 1800 x 1000  
 
 
@@ -365,7 +416,7 @@ ggplot(data = BC_NMDS_Graph, aes(MDS1,MDS2, shape = group))+
   annotate("text",x=0.04,y=-0.09,label="4B",size=10, fontface="bold")+
   annotate("text",x=0.30,y=-0.19,label="K4A",size=10, fontface="bold")+
   #Label the x-axis "NMDS1" and the y-axis "NMDS2"
-xlab("NMDS1")+
+  xlab("NMDS1")+
   ylab("NMDS2")
 #export at 1500x933
 
@@ -408,4 +459,3 @@ permutest(Dispersion_Results_Treatment,pairwise = T, permutations = 999)
 SIMPER <- with(Environment_Matrix,simper(Species_Matrix,Watershed))
 #Print out a summary of the results
 summary(SIMPER)
-
