@@ -177,6 +177,7 @@ Wide_Relative_Cover<-Relative_Cover%>%
   #Make a wide table using column taxa as overarching columns, fill with values from Relative_Cover column, if there is no value for one cell, insert a zero
   spread(key=taxa,value=Relative_Cover, fill=0)
 
+
 ##Evar - Smith and Wilson's Evenness Index##
 
 #Make a new data frame called Community_Metrics and run Evar on the Relative_Cover data
@@ -208,13 +209,18 @@ summary (Mixed_Model_Evenness <- lme(Evar ~ exclosure + Fire_Regime, random = (~
 #give the summary of a new data frame called Mixed_Model_Richness and preform the mixed model function 'lme' from the nlme package using richness, exclosure, and fire regime as fixed effects.  Then use the unique identifier 'Watershed.Plot.Fact and nest it within exclosure and then nest that within watershed as a random effect.  
 summary (Mixed_Model_Richness <- lme(richness ~ exclosure_Fact + Fire_Regime_Fact, random = (~1 | Watershed_Fact/exclosure_Fact), data = Community_Metrics))
 anova(Mixed_Model_Richness)
+summary (Mixed_Model_Evenness <- lme(Evar ~ exclosure_Fact + Fire_Regime_Fact, random = (~1 | Watershed_Fact/exclosure_Fact), data = Community_Metrics))
+anova(Mixed_Model_Evenness)
+
 
 #LME4
-
 
 #Give the summary of a new data frame called Mixed_Model_Richness and preform the mixed model function"lmer' using richness, exclosure, and fire regime as fixed effects.  Then use exlosure nested within watershed as a random effect.  Then run an anova -- online research suggests that LME4 is better for Generalized Mixed Models and NLME is better for linear mixed models -- Karin uses LME4 almost exclusively, she said that she understands the ins and outs of it better - when we were working on it the other day both the NLME package and the LME4 code come back with similar results, in which Fire regime was significant but exclosure was not.  Today, the code is giving me non-significant responses for the NLME but I havent figured out why yet.
 summary (Mixed_Model_Richness <- lmer(richness ~ exclosure_Fact + Fire_Regime_Fact + (1 | Watershed_Fact/exclosure_Fact), data = Community_Metrics))
 anova(Mixed_Model_Richness)
+summary (Mixed_Model_Evenness <- lmer(Evar ~ exclosure_Fact + Fire_Regime_Fact + (1 | Watershed_Fact/exclosure_Fact), data = Community_Metrics))
+anova(Mixed_Model_Evenness)
+
 
 #Fire regime is now nested within watershed, but the results are exactly the same - fire regime is already being accounted for as a fixed effect
 summary (Mixed_Model_Richness <- lmer(richness ~ exclosure_Fact + Fire_Regime_Fact + (1 | Watershed_Fact/Fire_Regime_Fact/exclosure_Fact), data = Community_Metrics))
@@ -245,7 +251,7 @@ t.test(Community_Metrics_3$Evar~Community_Metrics_3$Watershed)
 Diversity_Summary<-Community_Metrics%>%
   #group by watershed and exclosure
   group_by(Watershed,exclosure)%>%
-  #In new columns, calculate the standard deviation, mean, and length of Species Richness and EQ  
+  #In new columns, calculate the standard deviation, mean, and length of Species Richness and Evar
   summarize(Richness_Std=sd(richness),Richness_Mean=mean(richness), Richness_n=length(richness), Evar_Std=sd(Evar), Evar_Mean=mean(Evar), Evar_n=length(Evar))%>%
   #Make a new column and calculate the Standard Error for Species Richness and EQ
   mutate(Richness_St_Error=Richness_Std/sqrt(Richness_n), Evar_St_Error=Evar_Std/sqrt(Evar_n))
@@ -427,17 +433,30 @@ ggplot(data = BC_NMDS_Graph, aes(MDS1,MDS2, shape = group))+
 Species_Matrix <- Wide_Relative_Cover[,4:ncol(Wide_Relative_Cover)]
 #Make a new dataframe with data from Wide_Relative_Cover columns 1-3
 Environment_Matrix <- Wide_Relative_Cover[,1:3]
+Environment_Matrix$Watershed_Fact=as.factor(Environment_Matrix$Watershed)
+Environment_Matrix$Exclosure_Fact=as.factor(Environment_Matrix$exclosure)
+Environment_Matrix$Plot_Fact=as.factor(Environment_Matrix$plot)
+Environment_Matrix$Watershed_Exclosure=interaction(Environment_Matrix$Watershed_Fact:Environment_Matrix$Exclosure_Fact)
+Environment_Matrix$Watershed_Exclosure_Plot=interaction(Environment_Matrix$Watershed_Exclosure:Environment_Matrix$Plot_Fact)
+
 
 #Make a new dataframe with data from Relative_Cover
 Relative_Cover2 <- Relative_Cover%>%
   #Keep only the columns "Watershed", "Exclosure","plot","taxa", and "Relative_Cover"
   select(Watershed,exclosure,plot,taxa,Relative_Cover)
+
+
 #Make a new dataframe with data from Relative_Cover2
 Wide_Relative_Cover2 <- Relative_Cover2%>%
   #Make a qide data frame using "Taxa" as the columns and fill with "Relative_Cover", if there is no data, fill cell with zero
   spread(key = taxa, value = Relative_Cover, fill = 0)
 #run a perMANOVA comparing across watershed and exclosure, how does the species composition differ.  Permutation = 999 - run this 999 times and tell us what the preportion of times it was dissimilar
 PerMANOVA <- adonis2(formula = Species_Matrix~Watershed*exclosure, data=Environment_Matrix,permutations = 999, method = "bray")
+#give a print out of the PermMANOVA
+print(PerMANOVA)
+
+##PerMANOVA test with strata - mixed model analysis
+PerMANOVA <- adonis2(formula = Species_Matrix~Watershed*exclosure, data=Environment_Matrix,permutations = 999, method = "bray", strata=Watershed_Exclosure/Plot_Fact)
 #give a print out of the PermMANOVA
 print(PerMANOVA)
 
