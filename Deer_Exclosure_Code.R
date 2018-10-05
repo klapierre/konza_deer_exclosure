@@ -29,10 +29,10 @@ library(tidyverse)
 #Set ggplot2 theme to black and white
 theme_set(theme_bw())
 #Update ggplot2 theme - make box around the x-axis title size 30, vertically justify x-axis title to 0.35, Place a margin of 15 around the x-axis title.  Make the x-axis title size 30. For y-axis title, make the box size 30, put the writing at a 90 degree angle, and vertically justify the title to 0.5.  Add a margin of 15 and make the y-axis text size 25. Make the plot title size 30 and vertically justify it to 2.  Do not add any grid lines.  Do not add a legend title, and make the legend size 20
-theme_update(axis.title.x=element_text(size=30, vjust=-0.35, margin=margin(t=15)),
-             axis.text.x=element_text(size=30), axis.title.y=element_text(size=30, angle=90, vjust=0.5,
-                                                                          margin=margin(r=15)), axis.text.y=element_text(size=30), plot.title =
-               element_text(size=30, vjust=2), panel.grid.major=element_blank(), 
+theme_update(axis.title.x=element_text(size=40, vjust=-0.35, margin=margin(t=15)),
+             axis.text.x=element_text(size=40), axis.title.y=element_text(size=40, angle=90, vjust=0.5,
+                                                                          margin=margin(r=15)), axis.text.y=element_text(size=40), plot.title =
+               element_text(size=40, vjust=2), panel.grid.major=element_blank(), 
              panel.grid.minor=element_blank(),
              legend.text=element_text(size=30))
 
@@ -63,7 +63,6 @@ Deer_Exclosure_Spp_Name<-Deer_Exclosure_Resampling_Data%>%
   mutate(taxa=paste(genus, spp, sep=" "))%>%
   #In the column labled taxa, if the sppnum equals any of the following numbers, make the taxa the species in quotes.  Otherwise, fill the column taxa with what already exists in the column taxa. 
   mutate(taxa=ifelse(sppnum==786,"euphorbia spp", ifelse(sppnum==900,"elymus elymoides", ifelse(sppnum==999, "callirhoe involucrata", ifelse(sppnum==992, "ceanothus herbaceus", ifelse(sppnum==990, "cornus drummondii", ifelse(sppnum==165, "cyperus spp", ifelse(sppnum==900, "elymus elymoides", ifelse(sppnum==996, "elymus elymoides",ifelse(sppnum==991, "eupatorium altissimum", ifelse(sppnum==86, "kuhnia eupatorioides", ifelse(sppnum==995,"ratibida columnifera", ifelse(sppnum==997,"rhus glabra", ifelse(sppnum==980,"salvia azurea",ifelse(sppnum==993,"verbena stricta", ifelse(sppnum==3,"schizachyrium scoparium", ifelse(sppnum==998,"kuhnia eupatorioides",taxa)))))))))))))))))
-
 
 #### 30 x 30 m Plot Speices Richness ####
 
@@ -154,9 +153,25 @@ Functional_Group_Extra_Species_Richness_Summary<-Functional_Group_Extra_Species_
   mutate(Burn_Regime_Labels=ifelse(Fire_Regime=="Annual","Annual Burn Regime","Four year Burn Regime"))
 
 ######T-test comparing research area level species richness across exclosure treatments, using burn regimes as replicates######
+#Graminoids
 Functional_Group_Graminoids<-(subset(Functional_Group_Extra_Species_Richness_Summary,functional_group=="graminoid"))
 t.test(Functional_Group_Graminoids$Richness_Mean~Functional_Group_Graminoids$exclosure)
 t.test(Functional_Group_Graminoids$Richness_Mean~Functional_Group_Graminoids$Fire_Regime)
+
+#Forbs
+Functional_Group_forb<-(subset(Functional_Group_Extra_Species_Richness_Summary,functional_group=="forb"))
+t.test(Functional_Group_forb$Richness_Mean~Functional_Group_forb$exclosure)
+t.test(Functional_Group_forb$Richness_Mean~Functional_Group_forb$Fire_Regime)
+
+#Legumes
+Functional_Group_legume<-(subset(Functional_Group_Extra_Species_Richness_Summary,functional_group=="legume"))
+t.test(Functional_Group_legume$Richness_Mean~Functional_Group_legume$exclosure)
+t.test(Functional_Group_legume$Richness_Mean~Functional_Group_legume$Fire_Regime)
+
+#Woody
+Functional_Group_woody<-(subset(Functional_Group_Extra_Species_Richness_Summary,functional_group=="woody"))
+t.test(Functional_Group_woody$Richness_Mean~Functional_Group_woody$exclosure)
+t.test(Functional_Group_woody$Richness_Mean~Functional_Group_woody$Fire_Regime)
 
 ##Figure - Make a bar graph using ggplot2.  Use data from "Functional_Group_Extra_Species_Diversity_Summary".  Change the aesthetics x is equal to the data from "exlosure", and y is equal to the "Richness_Mean"
 ggplot(Functional_Group_Extra_Species_Richness_Summary,aes(x=exclosure,y=Richness_Mean, fill=functional_group, position="stack"))+
@@ -173,9 +188,9 @@ ggplot(Functional_Group_Extra_Species_Richness_Summary,aes(x=exclosure,y=Richnes
   facet_wrap(~Burn_Regime_Labels)+
   #Make the y-axis extend to 50
   expand_limits(y=50)+
-  theme(strip.background = element_blank(), panel.border = element_rect(), strip.text.x = element_text(size=28), strip.text.y = element_text(size=28))+
+  theme(strip.background = element_blank(), panel.border = element_rect(), strip.text.x = element_text(size=40), strip.text.y = element_text(size=40))+
   guides(fill=guide_legend(title="Functional Group"))+
-  theme(legend.title = element_text(size = 30))
+  theme(legend.title = element_text(size = 40))
 #Save at the graph at 1400x1500
 
 
@@ -248,12 +263,23 @@ Species_Richness<-Relative_Cover%>%
   group_by(Fire_Regime,plot)%>%
   summarize(Avg_Richness=mean(Richness))
 
-#Make a new data frame called Wide_Relative_Cover using data from Relative_Cover
+#Make a new data frame called Wide_Relative_Cover using data from Relative_Cover - Watershed
+Wide_Relative_Cover_1<-Relative_Cover%>%
+  #Keep only the columns taxa, Relative_Cover, Watershed, plot, and exclosure
+  select(taxa,Relative_Cover,Watershed,plot,exclosure)%>%
+  mutate(Fire_Regime=ifelse(Watershed=="K1B","Annual","Four Year"))%>%
+  #Make a wide table using column taxa as overarching columns, fill with values from Relative_Cover column, if there is no value for one cell, insert a zero
+  spread(key=taxa,value=Relative_Cover, fill=0)
+
+#Make a new data frame called Wide_Relative_Cover using data from Relative_Cover - Fire Regime
 Wide_Relative_Cover<-Relative_Cover%>%
   group_by(exclosure,taxa,plot,Fire_Regime)%>%
   summarize(Avg_Relative_Cover=mean(Relative_Cover))%>%
+  ungroup()%>%
+  mutate(Fire_Regime=paste(ifelse(Fire_Regime=="Annual Burn Regime","Annual","Four year")))%>%
+  mutate(Treatment=paste(Fire_Regime,plot,sep="."))%>%
   #Keep only the columns taxa, Relative_Cover, Watershed, plot, and exclosure
-  select(taxa,Avg_Relative_Cover,plot,exclosure,Fire_Regime)%>%
+  select(taxa,Avg_Relative_Cover,plot,exclosure,Fire_Regime,Treatment)%>%
   #Make a wide table using column taxa as overarching columns, fill with values from Relative_Cover column, if there is no value for one cell, insert a zero
   spread(key=taxa,value=Avg_Relative_Cover, fill=0)
 
@@ -320,7 +346,7 @@ Species_Richness_Plot<-ggplot(Diversity_Summary,aes(x=as.factor(Fire_Regime),y=R
   #Label the x-axis "Watershed"
   xlab("Burn Regime")+
   #Label the y-axis "Species Richness"
-  ylab(bquote("Species Richness (per" *~m^2*")"))+
+  ylab(bquote("Species Richness (per " *~m^2*")"))+
   #Fill the bar graphs with grey and white according and label them "Inside Fence" and "Outside Fence"
   scale_fill_manual(values=c("grey","white"), labels=c("Deer Removal","Control"))+
   #Make the y-axis expand to 20
@@ -329,11 +355,11 @@ Species_Richness_Plot<-ggplot(Diversity_Summary,aes(x=as.factor(Fire_Regime),y=R
   #Place the legend at 0.8,0.94 and space it out by 3 lines
   theme(legend.position=c(0.75,0.94), legend.key.size = unit(2.0, 'lines'),legend.title = element_blank())+
   #Add "a." to the graph in size 10 at position 0.6,20
-  annotate("text",x=0.5,y=20,label="a.",size=15)+
+  annotate("text",x=0.55,y=20,label="a.",size=20)+
   #Add "A" to the graph in size 6 at position 1,17
-  annotate("text",x=1,y=14,label="A",size=10)+
+  annotate("text",x=1,y=14,label="A",size=15)+
   #Add "B" to the graph in size 6 at position 2,13.5
-  annotate("text",x=2,y=17,label="B",size=10)
+  annotate("text",x=2,y=17,label="B",size=15)
 
 #Figure 2b - Make a dataframe called EQ_Plot using ggplot2.  Use data from Diversity summary, with the x-axis being Watershed, and the y-axis being EQ_Mean, the bars should be based on exclosures
 Evar_Plot<-ggplot(Diversity_Summary,aes(x=as.factor(Fire_Regime),y=Evar_Mean,fill=exclosure))+
@@ -344,7 +370,7 @@ Evar_Plot<-ggplot(Diversity_Summary,aes(x=as.factor(Fire_Regime),y=Evar_Mean,fil
   #Label the x-axis "Watershed"
   xlab("Burn Regime")+
   #Label the y-axis "Evenness Quotient"
-  ylab(bquote("Evenness Index (per" *~m^2*")"))+
+  ylab(bquote("Evenness Index (per " *~m^2*")"))+
   #Fill the bars with grey and white and label them "Inside Fence" and "Outside Fence"
   scale_fill_manual(values=c("grey","white"), labels=c("Deer Removal","Control"))+
   #do not include a legend
@@ -353,7 +379,7 @@ Evar_Plot<-ggplot(Diversity_Summary,aes(x=as.factor(Fire_Regime),y=Evar_Mean,fil
   #Expand the y-axis to 1.0
   expand_limits(y=0.5)+
   #add text "b." at 0.6,1.0 in size 10
-  annotate("text",x=.5,y=0.5,label="b.",size=15)
+  annotate("text",x=.55,y=0.5,label="b.",size=20)
 
 #Figure 2 - Make a figure that has one row and two columns for two graphs
 pushViewport(viewport(layout=grid.layout(1,2)))
@@ -404,7 +430,7 @@ FG_Graminoid_Plot<-ggplot(subset(FG_Cover_Summary,functional_group=="graminoid")
   #Label the x-axis "Watershed"
   xlab("Burn Regime")+
   #Label the y-axis "Species Richness"
-  ylab(bquote("Relative Cover (per" *~m^2*")"))+
+  ylab(bquote("Relative Cover (per " *~m^2*")"))+
   #Fill the bar graphs with grey and white according and label them "Inside Fence" and "Outside Fence"
   geom_errorbar(aes(ymin=Richness_Mean-Richness_St_Error,ymax=Richness_Mean+Richness_St_Error),position=position_dodge(0.9),width=0.2)+
   scale_fill_manual(values=c("grey","white"), labels=c("Deer Removal","Control"))+
@@ -412,9 +438,9 @@ FG_Graminoid_Plot<-ggplot(subset(FG_Cover_Summary,functional_group=="graminoid")
   expand_limits(y=1)+
   scale_x_discrete(labels=Fire_Regime_Labels)+
   #Place the legend at 0.8,0.94 and space it out by 3 lines
-  theme(legend.position=c(0.81,0.92), legend.key.size = unit(2.0, 'lines'),legend.title = element_blank())+
+  theme(legend.position=c(0.80,0.92), legend.key.size = unit(2.0, 'lines'),legend.title = element_blank())+
   #Add "a." to the graph in size 10 at position 0.6,20
-  annotate("text",x=0.92,y=1,label="a. Graminoids",size=15)
+  annotate("text",x=0.93,y=1,label="a. Graminoids",size=15)
 
 #Figure 2a - Make a dataframe called Species_Richness_Plot using gglpot2.  Use data from Diversity_Summary, making the x-axis Watershed, and y-axis Richness_Mean, the bars should be based on exclosures
 FG_Forb_Plot<-ggplot(subset(FG_Cover_Summary,functional_group=="forb"),aes(x=Fire_Regime,y=Richness_Mean,fill=exclosure))+
@@ -424,7 +450,7 @@ FG_Forb_Plot<-ggplot(subset(FG_Cover_Summary,functional_group=="forb"),aes(x=Fir
   #Label the x-axis "Watershed"
   xlab("Burn Regime")+
   #Label the y-axis "Species Richness"
-  ylab(bquote("Relative Cover (per" *~m^2*")"))+
+  ylab(bquote("Relative Cover (per " *~m^2*")"))+
   #Fill the bar graphs with grey and white according and label them "Inside Fence" and "Outside Fence"
   scale_fill_manual(values=c("grey","white"), labels=c("Deer Removal","Control"))+
   geom_errorbar(aes(ymin=Richness_Mean-Richness_St_Error,ymax=Richness_Mean+Richness_St_Error),position=position_dodge(0.9),width=0.2)+
@@ -434,7 +460,7 @@ FG_Forb_Plot<-ggplot(subset(FG_Cover_Summary,functional_group=="forb"),aes(x=Fir
   #Place the legend at 0.8,0.94 and space it out by 3 lines
   theme(legend.position="none")+
   #Add "a." to the graph in size 10 at position 0.6,20
-  annotate("text",x=1.35,y=1.0,label="b. Non-Leguminous Forbs",size=15)
+  annotate("text",x=1.36,y=1.0,label="b. Non-Leguminous Forbs",size=15)
 #Figure 2b - Make a dataframe called EQ_Plot using ggplot2.  Use data from Diversity summary, with the x-axis being Watershed, and the y-axis being EQ_Mean, the bars should be based on exclosures
 
 #Figure 2 - Make a figure that has one row and two columns for two graphs
@@ -448,16 +474,16 @@ print(FG_Forb_Plot,vp=viewport(layout.pos.row=1, layout.pos.col =2))
 
 
 
-### Figure 4 - Rank Abundance Curves ###
+#### Figure 4 - Rank Abundance Curves ####
 
 
 #Make a new data table called RAC_Mean using data from Relative_Cover - the mean is being taken across all plots for ease of comparison
-RAC_Mean<-Relative_Cover%>%
+RAC_Mean<-Avg_Relative_Cover%>%
   #Group by Treatment and taxa
-  mutate(Fire_Regime=ifelse(Watershed=="K1B","Annual","Four Year"))%>%
+  #mutate(Fire_Regime=ifelse(Watershed=="K1B","Annual","Four Year"))%>%
   group_by(exclosure,Fire_Regime,taxa)%>%
   #In a column named "Mean" give the mean of the "Relative_Cover" according to the grouping
-  summarize(Mean=mean(Relative_Cover))%>%
+  summarize(Mean=mean(Avg_Relative_Cover))%>%
   #Ungroup the data
   ungroup()%>%
   #Arrange the columns by "Treatment" and the reverse "Mean" (this will arrange the data table to be categorized by treatment and then highest to lowest mean within each treatmnet
@@ -470,55 +496,86 @@ RAC_Mean<-Relative_Cover%>%
   #Ungroup data
   ungroup()%>%
   #Make a new column called "Treatment_Type" where data from "exclosure" is taken and rewritten as "Inside Fence" and "Outside Fence"
-  mutate(Treatment_Type=ifelse(exclosure=="inside","Inside Fence", "Outside Fence"))%>%
+  mutate(Treatment_Type=ifelse(exclosure=="inside","Deer Removal", "Control"))%>%
   #Make a new column called Symbol so that if the taxa is equal to one stated below, the symbol number will be entered (15,5,2,etc.), for all else enter 16 (rare species) - this will later allow for symbols to be assigned in the figure 3 based on this column
-  mutate(Symbol=ifelse(taxa=="andropogon gerardii",15, ifelse(taxa=="eragrostis spectabilis",5, ifelse(taxa=="schizachyrium scoparium",2, ifelse(taxa=="sorghastrum nutans",18, ifelse(taxa=="sporobolus asper",1,ifelse(taxa=="aster ericoides",17,ifelse(taxa=="amorpha canescens",0,16))))))))
- 
-#######################LEFT OFF HERE ###################################
+  mutate(Symbol=ifelse(taxa=="andropogon gerardii",15, ifelse(taxa=="carex heliophila",5, ifelse(taxa=="schizachyrium scoparium",2, ifelse(taxa=="sorghastrum nutans",18, ifelse(taxa=="sporobolus asper",1,ifelse(taxa=="aster ericoides",17,ifelse(taxa=="sporobolus heterolepis",0,16))))))))
 
+RAC_1Inside <- subset(RAC_Mean,Treatment=="Annual Burn Regime.inside")
 #Made plot using data from RAC_Mean with x being "Ranks" and y being "Mean"
-ggplot(RAC_Mean,aes(x=Ranks,y=Mean))+
+RAC_1Inside_Graph<-ggplot(RAC_1Inside,aes(x=Ranks,y=Mean))+
   #Make a line graph
   geom_line()+
   #when making the points in the line graph, change the symbols to be equal to the "Symbol" column and make them a size 3
-  geom_point(shape=RAC_Mean$Symbol, size=4)+
-  #Label the x-axis "Species Rank"
-  xlab("Species Rank")+
+  geom_point(shape=RAC_1Inside$Symbol, size=4)+
   #Label the y-axis "Relative Abundance (%)"
   ylab("Relative Abundance (%)")+
   #Change the theme so that the boarders and backgrounds are white and the x- and y-axis text size is 24
-  theme(strip.background = element_rect(color="white",fill="white"),strip.text.x = element_text(size=28), strip.text.y = element_text(size=28))+
-  #Makes a matrix of panels defined by row and column facetting variables (Watershed and Treatmnet_Type)
-  facet_grid(Fire_Regime~Treatment_Type)
-#save at 1500 x 933
+  theme(strip.background = element_rect(color="white",fill="white"),strip.text.x = element_text(size=28), strip.text.y = element_text(size=28),axis.title.x = element_blank(),axis.ticks.x = element_blank(),axis.text.x = element_blank(),axis.title.y = element_text(size=30))+
+  expand_limits(y=0.5)+
+  labs(title="Deer Removal")
 
-###TEST
-Subset <- subset(RAC_Mean,Fire_Regime=="Four Year"& exclosure=="inside")
+RAC_1Outside <- subset(RAC_Mean,Treatment=="Annual Burn Regime.outside")
 #Made plot using data from RAC_Mean with x being "Ranks" and y being "Mean"
-ggplot(Subset,aes(x=Ranks,y=Mean))+
+RAC_1Outside_Graph<-ggplot(RAC_1Outside,aes(x=Ranks,y=Mean))+
   #Make a line graph
   geom_line()+
   #when making the points in the line graph, change the symbols to be equal to the "Symbol" column and make them a size 3
-  geom_point(shape=Subset$Symbol, size=4)+
+  geom_point(shape=RAC_1Outside$Symbol, size=4)+
+  #Change the theme so that the boarders and backgrounds are white and the x- and y-axis text size is 24
+  theme(strip.background = element_rect(color="white",fill="white"),strip.text.x = element_text(size=28), strip.text.y = element_text(size=28),axis.title.x = element_blank(), axis.title.y=element_blank(),axis.ticks.x = element_blank(), axis.ticks.y = element_blank(),axis.text.y = element_blank(),axis.text.x = element_blank())+
+  expand_limits(y=0.5)+
+  labs(title="Control")
+
+RAC_4Inside <- subset(RAC_Mean,Treatment=="Four year Burn Regime.inside")
+#Made plot using data from RAC_Mean with x being "Ranks" and y being "Mean"
+RAC_4Inside_Graph<-ggplot(RAC_4Inside,aes(x=Ranks,y=Mean))+
+  #Make a line graph
+  geom_line()+
+  #when making the points in the line graph, change the symbols to be equal to the "Symbol" column and make them a size 3
+  geom_point(shape=RAC_4Inside$Symbol, size=4)+
   #Label the x-axis "Species Rank"
-  xlab("Species Rank")+
   #Label the y-axis "Relative Abundance (%)"
   ylab("Relative Abundance (%)")+
+  xlab("Species Rank")+
   #Change the theme so that the boarders and backgrounds are white and the x- and y-axis text size is 24
-  theme(strip.background = element_rect(color="white",fill="white"),strip.text.x = element_text(size=28), strip.text.y = element_text(size=28))
-#Makes a matrix of panels defined by row and column facetting variables (Watershed and Treatmnet_Type)
+  theme(strip.background = element_rect(color="white",fill="white"),strip.text.x = element_text(size=28), strip.text.y = element_text(size=28),axis.title.y = element_text(size=30),axis.title.x = element_text(size=30))+
+  expand_limits(y=0.5)
 
-#save at 1500 x 933
+RAC_4Outside <- subset(RAC_Mean,Treatment=="Four year Burn Regime.outside")
+#Made plot using data from RAC_Mean with x being "Ranks" and y being "Mean"
+RAC_4Outside_Graph<-ggplot(RAC_4Outside,aes(x=Ranks,y=Mean))+
+  #Make a line graph
+  geom_line()+
+  #when making the points in the line graph, change the symbols to be equal to the "Symbol" column and make them a size 3
+  geom_point(shape=RAC_4Outside$Symbol, size=4)+
+  #Label the x-axis "Species Rank"
+  xlab("Species Rank")+
+  #Change the theme so that the boarders and backgrounds are white and the x- and y-axis text size is 24
+  theme(strip.background = element_rect(color="white",fill="white"),strip.text.x = element_text(size=28), strip.text.y = element_text(size=28),axis.title.y = element_blank(), axis.ticks.y = element_blank(),axis.text.y = element_blank(),axis.title.x = element_text(size=30))+
+  expand_limits(y=0.5)
+
+#Figure 4 - Make a figure that has two row and two columns for four graphs
+pushViewport(viewport(layout=grid.layout(2,2)))
+#print out the viewport plot where the Species_Richness_plot is at position 1,1
+print(RAC_1Inside_Graph,vp=viewport(layout.pos.row=1, layout.pos.col =1))
+#print out the viewport plot where the Species_Richness_plot is at position 1,2
+print(RAC_1Outside_Graph,vp=viewport(layout.pos.row=1, layout.pos.col =2))
+#print out the viewport plot where the Species_Richness_plot is at position 2,1
+print(RAC_4Inside_Graph,vp=viewport(layout.pos.row=2, layout.pos.col =1))
+#print out the viewport plot where the Species_Richness_plot is at position 2,2
+print(RAC_4Outside_Graph,vp=viewport(layout.pos.row=2, layout.pos.col =2))
+#Save at 2000 x 1200 
 
 
-### Bray-Curtis NMDS ###
+
+#### Bray-Curtis NMDS ####
 
 
 #Update the theme so that legends will have titles (all else is the same as above)
-theme_update(axis.title.x=element_text(size=30, vjust=-0.35, margin=margin(t=15)), axis.text.x=element_text(size=30),
-             axis.title.y=element_text(size=30, angle=90, vjust=0.5, margin=margin(r=15)), axis.text.y=element_text(size=30),
-             plot.title = element_text(size=30, vjust=2),
-             panel.grid.major=element_blank(), panel.grid.minor=element_blank(), legend.text=element_text(size=25))
+theme_update(axis.title.x=element_text(size=40, vjust=-0.35, margin=margin(t=15)), axis.text.x=element_text(size=40),
+             axis.title.y=element_text(size=40, angle=90, vjust=0.5, margin=margin(r=15)), axis.text.y=element_text(size=40),
+             plot.title = element_text(size=40, vjust=2),
+             panel.grid.major=element_blank(), panel.grid.minor=element_blank(), legend.text=element_text(size=30))
 
 #Figure 1
 #Make new data frame called BC_Data and run an NMDS using data from Wide_Relative_Cover, columns 4 through 49
@@ -556,21 +613,21 @@ for(g in levels(BC_NMDS$group)){
 #Plot the data from BC_NMDS_Graph, where x=MDS1 and y=MDS2, make an ellipse based on "group"
 ggplot(data = BC_NMDS_Graph, aes(MDS1,MDS2, shape = group))+
   #make a point graph where the points are size 5.  Color them based on exlosure
-  geom_point(size=5, aes(color = exclosure)) +
+  geom_point(size=5, aes(color = exclosure))+
   #Make "inside" and "outside" dark grey and back and label them "Inside Fence", "Outside Fence".  Label this legend "Treatment"
   scale_color_manual(breaks=c("inside","outside"),
                      values = c("dark grey","black"),
-                     labels=c("Inside Fence", "Outside Fence"),
+                     labels=c("Deer Removal", "Control"),
                      name="Treatment")+
   #Use different shapes according to Watershed types
-  scale_shape_discrete(name="Fire Regime")+
+  scale_shape_discrete(name="Burn Regime")+
   #Use the data from BC_Ellipses to make ellipses that are size 1 with a solid line
   geom_path(data = BC_Ellipses, aes(x=NMDS1, y=NMDS2), size=1, linetype=1)+
   #make the text size of the legend titles 28
-  theme(legend.title = element_text(size=28),  legend.key.size = unit(2.0, 'lines'))+
+  theme(legend.title = element_text(size=30),  legend.key.size = unit(2.0, 'lines'),legend.position=c(0.12,0.82))+
   #Add annotations of K1B, 4B, and K4A inside the elipses and bold them
-  annotate("text",x=-.35,y=0.38,label="Annual",size=10, fontface="bold")+
-  annotate("text",x=0.25,y=-0.35,label="Four Year",size=10, fontface="bold")+
+  annotate("text",x=-.155,y=0.17,label="Annual",size=12, fontface="bold")+
+  annotate("text",x=0.21,y=-0.18,label="Four Year",size=12, fontface="bold")+
   #Label the x-axis "NMDS1" and the y-axis "NMDS2"
   xlab("NMDS1")+
   ylab("NMDS2")
@@ -580,9 +637,9 @@ ggplot(data = BC_NMDS_Graph, aes(MDS1,MDS2, shape = group))+
 ##PerMANOVA
 
 #Make a new dataframe with the data from Wide_Relative_Cover all columns after 4
-Species_Matrix <- Wide_Relative_Cover[,5:ncol(Wide_Relative_Cover)]
+Species_Matrix <- Wide_Relative_Cover_1[,5:ncol(Wide_Relative_Cover_1)]
 #Make a new dataframe with data from Wide_Relative_Cover columns 1-3
-Environment_Matrix <- Wide_Relative_Cover[,1:4]
+Environment_Matrix <- Wide_Relative_Cover_1[,1:4]
 Environment_Matrix$Watershed_Fact=as.factor(Environment_Matrix$Watershed)
 Environment_Matrix$Exclosure_Fact=as.factor(Environment_Matrix$exclosure)
 Environment_Matrix$Plot_Fact=as.factor(Environment_Matrix$plot)
@@ -619,16 +676,16 @@ print(PerMANOVA2)
 #Make a new dataframe and calculate the dissimilarity of the Species_Matrix dataframe
 BC_Distance_Matrix <- vegdist(Species_Matrix)
 #Run a dissimilarity matrix (PermDisp) comparing watershed
-Dispersion_Results_Fire_Regime <- betadisper(BC_Distance_Matrix,Wide_Relative_Cover$Fire_Regime)
+Dispersion_Results_Fire_Regime <- betadisper(BC_Distance_Matrix,Wide_Relative_Cover_1$Fire_Regime)
 permutest(Dispersion_Results_Fire_Regime,pairwise = T, permutations = 999)
 #Run a dissimilarity matrix (PermDisp) comparing exlosure
-Dispersion_Results_Treatment <- betadisper(BC_Distance_Matrix,Wide_Relative_Cover$exclosure)
+Dispersion_Results_Treatment <- betadisper(BC_Distance_Matrix,Wide_Relative_Cover_1$exclosure)
 permutest(Dispersion_Results_Treatment,pairwise = T, permutations = 999)
 
 
 ### Supplemental Tables 2-4 - SIMPER ###
 
-#Run a SIMPER test comparing data from the Environment_Matrix, to data from the Species_Matrix grouping by "Watershed"
+#Run a SIMPER test comparing data from the Environment_Matrix, to data from the Species_Matrix grouping by fire regime
 SIMPER <- with(Environment_Matrix,simper(Species_Matrix,Fire_Regime))
 #Print out a summary of the results
 summary(SIMPER)
