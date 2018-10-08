@@ -110,9 +110,10 @@ Extra_Species_Richness_Summary<-Extra_Species_Richness%>%
 
 ####Figure 3 - Make a bar graph using ggplot2.####
 #Use data from "Extra_Species_Diversity_Summary".  Change the aesthetics x is equal to the data from "exlosure", and y is equal to the "Richness_Mean"
-ggplot(Extra_Species_Richness_Summary,aes(x=exclosure,y=Richness_Mean))+
+ggplot(Extra_Species_Richness_Summary,aes(x=exclosure,y=Richness_Mean, fill=exclosure))+
   #Make a bar graph where the height of the bars is equal to the data (stat=identity) and you preserve the vertical position while adjusting the horizontal(position_dodge), and fill in the bars with the color grey.   -BW
-  geom_bar(stat="identity", position=position_dodge(),fill="grey")+
+  geom_bar(stat="identity", position=position_dodge())+
+  scale_fill_manual(values=c("lightcyan3","cadetblue4"))+
   #Make an error bar that represents the standard error within the data and place the error bars at position 0.9 and make them 0.2 wide.
   geom_errorbar(aes(ymin=Richness_Mean-Richness_St_Error,ymax=Richness_Mean+Richness_St_Error),position=position_dodge(0.9),width=0.2)+
   #Label the x-axis "Treatment"
@@ -121,7 +122,8 @@ ggplot(Extra_Species_Richness_Summary,aes(x=exclosure,y=Richness_Mean))+
   ylab(bquote("Species Richness (per 900" *~m^2*")"))+
   scale_x_discrete(labels=c("inside"="Deer Removal","outside"="Control"))+
   #Make the y-axis extend to 50
-  expand_limits(y=50)
+  expand_limits(y=50)+
+  theme(legend.position = "none")
 #Save at the graph at 1400x1500
 
 #### Functional Group Richness by Treatment Type ####
@@ -182,7 +184,7 @@ ggplot(Functional_Group_Extra_Species_Richness_Summary,aes(x=exclosure,y=Richnes
   xlab("Deer Removal Treatment")+
   #Label the y-axis "Species Richness"
   ylab(bquote("Species Richness (per 900" *~m^2*")"))+
-  scale_fill_manual(values=c("white","gray90", "gray54","gray0"), labels=c("Non-Leguminous Forb","Graminoid","Legume","Woody"))+
+  scale_fill_manual(values=c("white","lightcyan2", "cadetblue4","darkslategrey"), labels=c("Non-Leguminous Forb","Graminoid","Legume","Woody"))+
   scale_x_discrete(labels=c("inside"="Deer Removal","outside"="Control"))+
   theme(legend.key = element_rect(size=4), legend.key.size = unit(1,"centimeters"))+
   facet_wrap(~Burn_Regime_Labels)+
@@ -190,7 +192,7 @@ ggplot(Functional_Group_Extra_Species_Richness_Summary,aes(x=exclosure,y=Richnes
   expand_limits(y=50)+
   theme(strip.background = element_blank(), panel.border = element_rect(), strip.text.x = element_text(size=40), strip.text.y = element_text(size=40))+
   guides(fill=guide_legend(title="Functional Group"))+
-  theme(legend.title = element_text(size = 40))
+  theme(legend.title = element_text(size = 30), legend.position = c(0.17,0.92))
 #Save at the graph at 1400x1500
 
 
@@ -320,7 +322,6 @@ anova(Mixed_Model_Richness)
 summary (Mixed_Model_Evenness <- lmer(Evar ~ exclosure_Fact*Fire_Regime_Fact + (1 | Watershed_Fact/exclosure_Fact), data = Community_Metrics_LMER))
 anova(Mixed_Model_Evenness)
 
-
 #Make a new dataframe to generate Figure 2 called Diversity_Summary using data from Diversity
 Diversity_Summary<-Community_Metrics_LMER%>%
   #group by watershed and exclosure
@@ -348,7 +349,7 @@ Species_Richness_Plot<-ggplot(Diversity_Summary,aes(x=as.factor(Fire_Regime),y=R
   #Label the y-axis "Species Richness"
   ylab(bquote("Species Richness (per " *~m^2*")"))+
   #Fill the bar graphs with grey and white according and label them "Inside Fence" and "Outside Fence"
-  scale_fill_manual(values=c("grey","white"), labels=c("Deer Removal","Control"))+
+  scale_fill_manual(values=c("lightcyan3","cadetblue4"), labels=c("Deer Removal","Control"))+
   #Make the y-axis expand to 20
   expand_limits(y=20)+
   scale_x_discrete(labels=Fire_Regime_Labels)+
@@ -359,7 +360,8 @@ Species_Richness_Plot<-ggplot(Diversity_Summary,aes(x=as.factor(Fire_Regime),y=R
   #Add "A" to the graph in size 6 at position 1,17
   annotate("text",x=1,y=14,label="A",size=15)+
   #Add "B" to the graph in size 6 at position 2,13.5
-  annotate("text",x=2,y=17,label="B",size=15)
+  annotate("text",x=2,y=17,label="B",size=15)+
+  theme(plot.margin=margin(10,10,10,10,"pt"))
 
 #Figure 2b - Make a dataframe called EQ_Plot using ggplot2.  Use data from Diversity summary, with the x-axis being Watershed, and the y-axis being EQ_Mean, the bars should be based on exclosures
 Evar_Plot<-ggplot(Diversity_Summary,aes(x=as.factor(Fire_Regime),y=Evar_Mean,fill=exclosure))+
@@ -372,14 +374,15 @@ Evar_Plot<-ggplot(Diversity_Summary,aes(x=as.factor(Fire_Regime),y=Evar_Mean,fil
   #Label the y-axis "Evenness Quotient"
   ylab(bquote("Evenness Index (per " *~m^2*")"))+
   #Fill the bars with grey and white and label them "Inside Fence" and "Outside Fence"
-  scale_fill_manual(values=c("grey","white"), labels=c("Deer Removal","Control"))+
+  scale_fill_manual(values=c("lightcyan3","cadetblue4"), labels=c("Deer Removal","Control"))+
   #do not include a legend
   theme(legend.position="none")+
   scale_x_discrete(labels=Fire_Regime_Labels)+
   #Expand the y-axis to 1.0
   expand_limits(y=0.5)+
   #add text "b." at 0.6,1.0 in size 10
-  annotate("text",x=.55,y=0.5,label="b.",size=20)
+  annotate("text",x=.55,y=0.5,label="b.",size=20)+
+  theme(plot.margin=margin(10,10,10,10,"pt"))
 
 #Figure 2 - Make a figure that has one row and two columns for two graphs
 pushViewport(viewport(layout=grid.layout(1,2)))
@@ -433,14 +436,15 @@ FG_Graminoid_Plot<-ggplot(subset(FG_Cover_Summary,functional_group=="graminoid")
   ylab(bquote("Relative Cover (per " *~m^2*")"))+
   #Fill the bar graphs with grey and white according and label them "Inside Fence" and "Outside Fence"
   geom_errorbar(aes(ymin=Richness_Mean-Richness_St_Error,ymax=Richness_Mean+Richness_St_Error),position=position_dodge(0.9),width=0.2)+
-  scale_fill_manual(values=c("grey","white"), labels=c("Deer Removal","Control"))+
+  scale_fill_manual(values=c("lightcyan3","cadetblue4"), labels=c("Deer Removal","Control"))+
   #Make the y-axis expand to 20
   expand_limits(y=1)+
   scale_x_discrete(labels=Fire_Regime_Labels)+
   #Place the legend at 0.8,0.94 and space it out by 3 lines
-  theme(legend.position=c(0.80,0.92), legend.key.size = unit(2.0, 'lines'),legend.title = element_blank())+
+  theme(legend.position=c(0.80,0.94), legend.key.size = unit(2.0, 'lines'),legend.title = element_blank())+
   #Add "a." to the graph in size 10 at position 0.6,20
-  annotate("text",x=0.93,y=1,label="a. Graminoids",size=15)
+  annotate("text",x=0.93,y=1,label="a. Graminoids",size=15)+
+  theme(plot.margin=margin(10,10,10,10,"pt"))
 
 #Figure 2a - Make a dataframe called Species_Richness_Plot using gglpot2.  Use data from Diversity_Summary, making the x-axis Watershed, and y-axis Richness_Mean, the bars should be based on exclosures
 FG_Forb_Plot<-ggplot(subset(FG_Cover_Summary,functional_group=="forb"),aes(x=Fire_Regime,y=Richness_Mean,fill=exclosure))+
@@ -452,7 +456,7 @@ FG_Forb_Plot<-ggplot(subset(FG_Cover_Summary,functional_group=="forb"),aes(x=Fir
   #Label the y-axis "Species Richness"
   ylab(bquote("Relative Cover (per " *~m^2*")"))+
   #Fill the bar graphs with grey and white according and label them "Inside Fence" and "Outside Fence"
-  scale_fill_manual(values=c("grey","white"), labels=c("Deer Removal","Control"))+
+  scale_fill_manual(values=c("lightcyan3","cadetblue4"), labels=c("Deer Removal","Control"))+
   geom_errorbar(aes(ymin=Richness_Mean-Richness_St_Error,ymax=Richness_Mean+Richness_St_Error),position=position_dodge(0.9),width=0.2)+
   #Make the y-axis expand to 20
   expand_limits(y=1.00)+
@@ -460,7 +464,8 @@ FG_Forb_Plot<-ggplot(subset(FG_Cover_Summary,functional_group=="forb"),aes(x=Fir
   #Place the legend at 0.8,0.94 and space it out by 3 lines
   theme(legend.position="none")+
   #Add "a." to the graph in size 10 at position 0.6,20
-  annotate("text",x=1.36,y=1.0,label="b. Non-Leguminous Forbs",size=15)
+  annotate("text",x=1.36,y=1.0,label="b. Non-Leguminous Forbs",size=15)+
+  theme(plot.margin=margin(10,10,10,10,"pt"))
 #Figure 2b - Make a dataframe called EQ_Plot using ggplot2.  Use data from Diversity summary, with the x-axis being Watershed, and the y-axis being EQ_Mean, the bars should be based on exclosures
 
 #Figure 2 - Make a figure that has one row and two columns for two graphs
@@ -539,7 +544,8 @@ RAC_4Inside_Graph<-ggplot(RAC_4Inside,aes(x=Ranks,y=Mean))+
   xlab("Species Rank")+
   #Change the theme so that the boarders and backgrounds are white and the x- and y-axis text size is 24
   theme(strip.background = element_rect(color="white",fill="white"),strip.text.x = element_text(size=28), strip.text.y = element_text(size=28),axis.title.y = element_text(size=30),axis.title.x = element_text(size=30))+
-  expand_limits(y=0.5)
+  expand_limits(y=0.5)+
+  theme(plot.margin=margin(10,10,10,10,"pt"))
 
 RAC_4Outside <- subset(RAC_Mean,Treatment=="Four year Burn Regime.outside")
 #Made plot using data from RAC_Mean with x being "Ranks" and y being "Mean"
@@ -552,7 +558,8 @@ RAC_4Outside_Graph<-ggplot(RAC_4Outside,aes(x=Ranks,y=Mean))+
   xlab("Species Rank")+
   #Change the theme so that the boarders and backgrounds are white and the x- and y-axis text size is 24
   theme(strip.background = element_rect(color="white",fill="white"),strip.text.x = element_text(size=28), strip.text.y = element_text(size=28),axis.title.y = element_blank(), axis.ticks.y = element_blank(),axis.text.y = element_blank(),axis.title.x = element_text(size=30))+
-  expand_limits(y=0.5)
+  expand_limits(y=0.5)+
+  theme(plot.margin=margin(10,10,10,10,"pt"))
 
 #Figure 4 - Make a figure that has two row and two columns for four graphs
 pushViewport(viewport(layout=grid.layout(2,2)))
@@ -616,7 +623,7 @@ ggplot(data = BC_NMDS_Graph, aes(MDS1,MDS2, shape = group))+
   geom_point(size=5, aes(color = exclosure))+
   #Make "inside" and "outside" dark grey and back and label them "Inside Fence", "Outside Fence".  Label this legend "Treatment"
   scale_color_manual(breaks=c("inside","outside"),
-                     values = c("dark grey","black"),
+                     values = c("lightcyan3","cadetblue4"),
                      labels=c("Deer Removal", "Control"),
                      name="Treatment")+
   #Use different shapes according to Watershed types
@@ -624,13 +631,14 @@ ggplot(data = BC_NMDS_Graph, aes(MDS1,MDS2, shape = group))+
   #Use the data from BC_Ellipses to make ellipses that are size 1 with a solid line
   geom_path(data = BC_Ellipses, aes(x=NMDS1, y=NMDS2), size=1, linetype=1)+
   #make the text size of the legend titles 28
-  theme(legend.title = element_text(size=30),  legend.key.size = unit(2.0, 'lines'),legend.position=c(0.12,0.82))+
+  theme(legend.title = element_text(size=30),  legend.key.size = unit(2.0, 'lines'),legend.position=c(0.14,0.82))+
   #Add annotations of K1B, 4B, and K4A inside the elipses and bold them
   annotate("text",x=-.155,y=0.17,label="Annual",size=12, fontface="bold")+
   annotate("text",x=0.21,y=-0.18,label="Four Year",size=12, fontface="bold")+
   #Label the x-axis "NMDS1" and the y-axis "NMDS2"
   xlab("NMDS1")+
-  ylab("NMDS2")
+  ylab("NMDS2")+
+  theme(plot.margin=margin(10,10,10,10,"pt"))
 #export at 1500x933
 
 
