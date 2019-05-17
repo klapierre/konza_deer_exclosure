@@ -64,6 +64,9 @@ Deer_Exclosure_Spp_Name<-Deer_Exclosure_Resampling_Data%>%
   #In the column labled taxa, if the sppnum equals any of the following numbers, make the taxa the species in quotes.  Otherwise, fill the column taxa with what already exists in the column taxa. 
   mutate(taxa=ifelse(sppnum==786,"euphorbia spp", ifelse(sppnum==900,"elymus elymoides", ifelse(sppnum==999, "callirhoe involucrata", ifelse(sppnum==992, "ceanothus herbaceus", ifelse(sppnum==990, "cornus drummondii", ifelse(sppnum==165, "cyperus spp", ifelse(sppnum==900, "elymus elymoides", ifelse(sppnum==996, "elymus elymoides",ifelse(sppnum==991, "eupatorium altissimum", ifelse(sppnum==86, "kuhnia eupatorioides", ifelse(sppnum==995,"ratibida columnifera", ifelse(sppnum==997,"rhus glabra", ifelse(sppnum==980,"salvia azurea",ifelse(sppnum==993,"verbena stricta", ifelse(sppnum==3,"schizachyrium scoparium", ifelse(sppnum==998,"kuhnia eupatorioides",taxa)))))))))))))))))
 
+#Make a new data frame called "Deer Density Data" and put the data from "Density_Ests_2009to2018_KonzaRegion.xlsx"
+Deer_Density_Data<-read.csv("Density_Ests_2009to2018_KonzaRegion.csv")
+
 #### 30 x 30 m Plot Speices Richness ####
 
 
@@ -109,6 +112,7 @@ Extra_Species_Richness_Summary<-Extra_Species_Richness%>%
   mutate(Richness_St_Error=Richness_Std/sqrt(Richness_n))
 
 ####Figure 3 - Make a bar graph using ggplot2.####
+#png(filename="Fig 3.png", width =6 ,height =6,units = 'in' ,res =300 )
 #Use data from "Extra_Species_Diversity_Summary".  Change the aesthetics x is equal to the data from "exlosure", and y is equal to the "Richness_Mean"
 ggplot(Extra_Species_Richness_Summary,aes(x=exclosure,y=Richness_Mean, fill=exclosure))+
   #Make a bar graph where the height of the bars is equal to the data (stat=identity) and you preserve the vertical position while adjusting the horizontal(position_dodge), and fill in the bars with the color grey.   -BW
@@ -117,13 +121,14 @@ ggplot(Extra_Species_Richness_Summary,aes(x=exclosure,y=Richness_Mean, fill=excl
   #Make an error bar that represents the standard error within the data and place the error bars at position 0.9 and make them 0.2 wide.
   geom_errorbar(aes(ymin=Richness_Mean-Richness_St_Error,ymax=Richness_Mean+Richness_St_Error),position=position_dodge(0.9),width=0.2)+
   #Label the x-axis "Treatment"
-  xlab("Deer Removal Treatment")+
+  xlab("Deer Exclosure Treatment")+
   #Label the y-axis "Species Richness"
   ylab(bquote("Species Richness (per 900" *~m^2*")"))+
-  scale_x_discrete(labels=c("inside"="Deer Removal","outside"="Control"))+
+  scale_x_discrete(labels=c("inside"="Deer Exclusion","outside"="Control"))+
   #Make the y-axis extend to 50
   expand_limits(y=50)+
   theme(legend.position = "none")
+#dev.off()
 #Save at the graph at 1400x1500
 
 #### Functional Group Richness by Treatment Type ####
@@ -181,23 +186,23 @@ ggplot(Functional_Group_Extra_Species_Richness_Summary,aes(x=exclosure,y=Richnes
   geom_bar(stat="identity",color="black")+
   #Make an error bar that represents the standard error within the data and place the error bars at position 0.9 and make them 0.2 wide.
   #Label the x-axis "Treatment"
-  xlab("Deer Removal Treatment")+
+  xlab("Deer Exclusure Treatment")+
   #Label the y-axis "Species Richness"
   ylab(bquote("Species Richness (per 900" *~m^2*")"))+
   scale_fill_manual(values=c("white","lightcyan2", "cadetblue4","darkslategrey"), labels=c("Non-Leguminous Forb","Graminoid","Legume","Woody"))+
-  scale_x_discrete(labels=c("inside"="Deer Removal","outside"="Control"))+
-  theme(legend.key = element_rect(size=4), legend.key.size = unit(1,"centimeters"))+
+  scale_x_discrete(labels=c("inside"="Deer Exclusion","outside"="Control"))+
+  theme(legend.key = element_rect(size=4), legend.key.size = unit(1.0,"centimeters"))+
   facet_wrap(~Burn_Regime_Labels)+
   #Make the y-axis extend to 50
   expand_limits(y=50)+
   theme(strip.background = element_blank(), panel.border = element_rect(), strip.text.x = element_text(size=40), strip.text.y = element_text(size=40))+
   guides(fill=guide_legend(title="Functional Group"))+
-  theme(legend.title = element_text(size = 30), legend.position = c(0.17,0.92))
+  theme(legend.title = element_text(size = 30), legend.position = c(0.15,0.92))
 #Save at the graph at 1400x1500
 
 
 
-##Supplementary Table 1 - Make a new data table called "Species_Table" using data from "Extra_Species_Richness"
+##Supplementary Table 1 -Make a new data table called "Species_Table" using data from "Extra_Species_Richness"
 Species_Table <- Extra_Species_Identity %>%
   #Make a new column named "Location" change exclosure data to "Outside Fence" and "Inside Fence"
   mutate(Location=ifelse(exclosure=="outside", "Outside Fence", "Inside Fence"))%>%
@@ -349,7 +354,7 @@ Species_Richness_Plot<-ggplot(Diversity_Summary,aes(x=as.factor(Fire_Regime),y=R
   #Label the y-axis "Species Richness"
   ylab(bquote("Species Richness (per " *~m^2*")"))+
   #Fill the bar graphs with grey and white according and label them "Inside Fence" and "Outside Fence"
-  scale_fill_manual(values=c("lightcyan3","cadetblue4"), labels=c("Deer Removal","Control"))+
+  scale_fill_manual(values=c("lightcyan3","cadetblue4"), labels=c("Deer Exclusion","Control"))+
   #Make the y-axis expand to 20
   expand_limits(y=20)+
   scale_x_discrete(labels=Fire_Regime_Labels)+
@@ -436,12 +441,12 @@ FG_Graminoid_Plot<-ggplot(subset(FG_Cover_Summary,functional_group=="graminoid")
   ylab(bquote("Relative Cover (per " *~m^2*")"))+
   #Fill the bar graphs with grey and white according and label them "Inside Fence" and "Outside Fence"
   geom_errorbar(aes(ymin=Richness_Mean-Richness_St_Error,ymax=Richness_Mean+Richness_St_Error),position=position_dodge(0.9),width=0.2)+
-  scale_fill_manual(values=c("lightcyan3","cadetblue4"), labels=c("Deer Removal","Control"))+
+  scale_fill_manual(values=c("lightcyan3","cadetblue4"), labels=c("Deer Exclusion","Control"))+
   #Make the y-axis expand to 20
   expand_limits(y=1)+
   scale_x_discrete(labels=Fire_Regime_Labels)+
   #Place the legend at 0.8,0.94 and space it out by 3 lines
-  theme(legend.position=c(0.80,0.94), legend.key.size = unit(2.0, 'lines'),legend.title = element_blank())+
+  theme(legend.position=c(0.75,0.94), legend.key.size = unit(2.0, 'lines'),legend.title = element_blank())+
   #Add "a." to the graph in size 10 at position 0.6,20
   annotate("text",x=0.93,y=1,label="a. Graminoids",size=15)+
   theme(plot.margin=margin(10,10,10,10,"pt"))
@@ -456,7 +461,7 @@ FG_Forb_Plot<-ggplot(subset(FG_Cover_Summary,functional_group=="forb"),aes(x=Fir
   #Label the y-axis "Species Richness"
   ylab(bquote("Relative Cover (per " *~m^2*")"))+
   #Fill the bar graphs with grey and white according and label them "Inside Fence" and "Outside Fence"
-  scale_fill_manual(values=c("lightcyan3","cadetblue4"), labels=c("Deer Removal","Control"))+
+  scale_fill_manual(values=c("lightcyan3","cadetblue4"), labels=c("Deer Exclusion","Control"))+
   geom_errorbar(aes(ymin=Richness_Mean-Richness_St_Error,ymax=Richness_Mean+Richness_St_Error),position=position_dodge(0.9),width=0.2)+
   #Make the y-axis expand to 20
   expand_limits(y=1.00)+
@@ -503,7 +508,7 @@ RAC_Mean<-Avg_Relative_Cover%>%
   #Make a new column called "Treatment_Type" where data from "exclosure" is taken and rewritten as "Inside Fence" and "Outside Fence"
   mutate(Treatment_Type=ifelse(exclosure=="inside","Deer Removal", "Control"))%>%
   #Make a new column called Symbol so that if the taxa is equal to one stated below, the symbol number will be entered (15,5,2,etc.), for all else enter 16 (rare species) - this will later allow for symbols to be assigned in the figure 3 based on this column
-  mutate(Symbol=ifelse(taxa=="andropogon gerardii",15, ifelse(taxa=="carex heliophila",5, ifelse(taxa=="schizachyrium scoparium",2, ifelse(taxa=="sorghastrum nutans",18, ifelse(taxa=="sporobolus asper",1,ifelse(taxa=="aster ericoides",17,ifelse(taxa=="sporobolus heterolepis",0,16))))))))
+  mutate(Symbol=ifelse(taxa=="andropogon gerardii",0, ifelse(taxa=="carex heliophila",2, ifelse(taxa=="schizachyrium scoparium",17, ifelse(taxa=="sorghastrum nutans",5, ifelse(taxa=="sporobolus asper",18,ifelse(taxa=="aster ericoides",15,ifelse(taxa=="sporobolus heterolepis",1,16))))))))
 
 RAC_1Inside <- subset(RAC_Mean,Treatment=="Annual Burn Regime.inside")
 #Made plot using data from RAC_Mean with x being "Ranks" and y being "Mean"
@@ -517,7 +522,7 @@ RAC_1Inside_Graph<-ggplot(RAC_1Inside,aes(x=Ranks,y=Mean))+
   #Change the theme so that the boarders and backgrounds are white and the x- and y-axis text size is 24
   theme(strip.background = element_rect(color="white",fill="white"),strip.text.x = element_text(size=28), strip.text.y = element_text(size=28),axis.title.x = element_blank(),axis.ticks.x = element_blank(),axis.text.x = element_blank(),axis.title.y = element_text(size=30))+
   expand_limits(y=0.5)+
-  labs(title="Deer Removal")
+  labs(title="Deer Exclusion")
 
 RAC_1Outside <- subset(RAC_Mean,Treatment=="Annual Burn Regime.outside")
 #Made plot using data from RAC_Mean with x being "Ranks" and y being "Mean"
@@ -624,7 +629,7 @@ ggplot(data = BC_NMDS_Graph, aes(MDS1,MDS2, shape = group))+
   #Make "inside" and "outside" dark grey and back and label them "Inside Fence", "Outside Fence".  Label this legend "Treatment"
   scale_color_manual(breaks=c("inside","outside"),
                      values = c("lightcyan3","cadetblue4"),
-                     labels=c("Deer Removal", "Control"),
+                     labels=c("Deer Exclusion", "Control"),
                      name="Treatment")+
   #Use different shapes according to Watershed types
   scale_shape_discrete(name="Burn Regime")+
@@ -769,3 +774,31 @@ print(Woody_Species,vp=viewport(layout.pos.row=2, layout.pos.col =2))
 print(Legumes,vp=viewport(layout.pos.row=2, layout.pos.col =1))
 print(Forbs,vp=viewport(layout.pos.row=1, layout.pos.col =2))
 #Save at 1800 x 1000  
+
+
+#### Deer Density Data ####
+ggplot(Deer_Density_Data,aes(x=Year, y=Density..km2.,fill=Location))+
+  geom_bar(stat = "identity",position = position_dodge())+
+  xlab("Year")+
+  ylab("Density per km^2")+
+  scale_fill_manual(values=c("grey","black"), labels=c("Konza", "Regional"))+
+  
+
+ggplot(Deer_Density_Data,aes(x=Year,y=Density..km2.,fill=Location))+
+  geom_line()+
+  xlab("Year")+
+  ylab("Density per km^2")
+
+
+ggplot(Deer_Density_Data,aes(x=Year,y=Density..km2.,fill=Location))+
+  geom_point()+
+  xlab("Year")+
+  ylab("Density per km^2")
+
+
+
+
+
+
+
+
