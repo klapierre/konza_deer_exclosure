@@ -781,7 +781,12 @@ ggplot(Deer_Density_Data,aes(x=Year, y=Density..km2.,fill=Location))+
   geom_bar(stat = "identity",position = position_dodge())+
   xlab("Year")+
   ylab("Density per km^2")+
-  scale_fill_manual(values=c("grey","black"), labels=c("Konza", "Regional"))+
+  scale_fill_manual(values=c("grey","black"), labels=c("Konza", "Regional"))
+
+ggplot(subset(Deer_Density_Data,location=Regium), aes(x=Year, y=Density..km2.))+
+  geom_bar(stat = "identity",position = position_dodge())+
+  xlab("Year")+
+  ylab("Density per km^2")
   
 
 ggplot(Deer_Density_Data,aes(x=Year,y=Density..km2.,fill=Location))+
