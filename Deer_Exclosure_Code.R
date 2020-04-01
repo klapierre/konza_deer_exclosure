@@ -1,12 +1,12 @@
-####### Konza Deer Exclosure Project######
+####### Konza Deer Exclosure Project ######
 
-####Set all general necessities####
+#### Set all general necessities ####
 
-#Set working directory - PC
+#Set working directory - Bloodworth PC
 setwd("/Users/bloodworthk/Dropbox (Smithsonian)/Konza Prairie/herbivore_removal_plots/deer exclosure resampling/Deer_Exclosure_Resampling_Data")
 
-#Set working directory- Mac
-setwd("/Users/kathrynbloodworth/Dropbox (Smithsonian)/Konza Prairie/herbivore_removal_plots/deer exclosure resampling/Deer_Exclosure_Resampling_Data")
+#Set working directory- Bloodworth Mac
+setwd("/Users/kathrynbloodworth/Dropbox (Smithsonian)/Projects/Konza Prairie/herbivore_removal_plots/deer exclosure resampling/Deer_Exclosure_Resampling_Data")
 
 #Load and install libraries
 library(MASS)
@@ -36,8 +36,7 @@ theme_update(axis.title.x=element_text(size=40, vjust=-0.35, margin=margin(t=15)
              panel.grid.minor=element_blank(),
              legend.text=element_text(size=30))
 
-####Read in all data and join data frames####
-
+#### Read in all data and join data frames ####
 
 #Read in Deer_Removal_Resampling_2017.csv from working directory
 Deer_Exclosure_Resampling_Data<-read.csv("3_Deer_Removal_Resampling_2017.csv")%>%
@@ -67,8 +66,7 @@ Deer_Exclosure_Spp_Name<-Deer_Exclosure_Resampling_Data%>%
 #Make a new data frame called "Deer Density Data" and put the data from "Density_Ests_2009to2018_KonzaRegion.xlsx"
 Deer_Density_Data<-read.csv("Density_Ests_2009to2018_KonzaRegion.csv")
 
-#### 30 x 30 m Plot Speices Richness ####
-
+#### Figure 3 30 x 30 m Deer Exclosure Fence Speices Richness ####
 
 #Make a new data table and place the data from "Deer_Exclosure_Spp_Name" in it
 Extra_Species_Identity<-Deer_Exclosure_Spp_Name%>%
@@ -111,7 +109,7 @@ Extra_Species_Richness_Summary<-Extra_Species_Richness%>%
   #Make a new column called "Richness_St_Error" and divide "Richness_Std" by the square root of "Richness_n"
   mutate(Richness_St_Error=Richness_Std/sqrt(Richness_n))
 
-####Figure 3 - Make a bar graph using ggplot2.####
+## Figure 3 - Make a bar graph using ggplot2 ##
 #png(filename="Fig 3.png", width =6 ,height =6,units = 'in' ,res =300 )
 #Use data from "Extra_Species_Diversity_Summary".  Change the aesthetics x is equal to the data from "exlosure", and y is equal to the "Richness_Mean"
 ggplot(Extra_Species_Richness_Summary,aes(x=exclosure,y=Richness_Mean, fill=exclosure))+
@@ -131,94 +129,7 @@ ggplot(Extra_Species_Richness_Summary,aes(x=exclosure,y=Richness_Mean, fill=excl
 #dev.off()
 #Save at the graph at 1400x1500
 
-#### Functional Group Richness by Treatment Type ####
-
-#Make a new data frame from "Extra_Species_Identity" to generate richness values for each research area
-Functional_Group_Extra_Species_Richness<-Extra_Species_Identity%>%  
-  select(-Species_Presence)%>%
-  unique()%>%
-  #group data frame by Watershed and exclosure
-  group_by(functional_group,exclosure,Fire_Regime,Watershed)%>%
-  #Make a new column named "Richness" and add the unique number of rows in the column "taxa" according to the groupings
-  summarise(Richness=length(taxa))%>%
-  #stop grouping by watershed and exclosure
-  ungroup()%>%
-  #group data by exclosure, fire regime and functional group
-  group_by(exclosure,Fire_Regime,functional_group)%>%
-  #add new column averaging the richness column by groupings
-  summarize(Avg_Richness=mean(Richness))
-
-
-#Make a new data table using data from "Functional_Group_Extra_Species_Richness"
-Functional_Group_Extra_Species_Richness_Summary<-Functional_Group_Extra_Species_Richness%>%
-  #Group data by the columns "Watershed" and "exclosure"
-  group_by(exclosure,functional_group,Fire_Regime)%>%
-  #In this data frame, summarize the data.  Make a new column named "Richness_Std" and calculate the standard deviation from the column "Richness".  Also calculate the mean and length from the column "Richness" and place them into their own columns.
-  summarize(Richness_Std=sd(Avg_Richness),Richness_Mean=mean(Avg_Richness),Richness_n=length(Avg_Richness))%>%
-  #Make a new column called "Richness_St_Error" and divide "Richness_Std" by the square root of "Richness_n"
-  mutate(Richness_St_Error=Richness_Std/sqrt(Richness_n))%>%
-  mutate(Burn_Regime_Labels=ifelse(Fire_Regime=="Annual","Annual Burn Regime","Four year Burn Regime"))
-
-######T-test comparing research area level species richness across exclosure treatments, using burn regimes as replicates######
-#Graminoids
-Functional_Group_Graminoids<-(subset(Functional_Group_Extra_Species_Richness_Summary,functional_group=="graminoid"))
-t.test(Functional_Group_Graminoids$Richness_Mean~Functional_Group_Graminoids$exclosure)
-t.test(Functional_Group_Graminoids$Richness_Mean~Functional_Group_Graminoids$Fire_Regime)
-
-#Forbs
-Functional_Group_forb<-(subset(Functional_Group_Extra_Species_Richness_Summary,functional_group=="forb"))
-t.test(Functional_Group_forb$Richness_Mean~Functional_Group_forb$exclosure)
-t.test(Functional_Group_forb$Richness_Mean~Functional_Group_forb$Fire_Regime)
-
-#Legumes
-Functional_Group_legume<-(subset(Functional_Group_Extra_Species_Richness_Summary,functional_group=="legume"))
-t.test(Functional_Group_legume$Richness_Mean~Functional_Group_legume$exclosure)
-t.test(Functional_Group_legume$Richness_Mean~Functional_Group_legume$Fire_Regime)
-
-#Woody
-Functional_Group_woody<-(subset(Functional_Group_Extra_Species_Richness_Summary,functional_group=="woody"))
-t.test(Functional_Group_woody$Richness_Mean~Functional_Group_woody$exclosure)
-t.test(Functional_Group_woody$Richness_Mean~Functional_Group_woody$Fire_Regime)
-
-##Figure - Make a bar graph using ggplot2.  Use data from "Functional_Group_Extra_Species_Diversity_Summary".  Change the aesthetics x is equal to the data from "exlosure", and y is equal to the "Richness_Mean"
-ggplot(Functional_Group_Extra_Species_Richness_Summary,aes(x=exclosure,y=Richness_Mean, fill=functional_group, position="stack"))+
-  #Make a bar graph where the height of the bars is equal to the data (stat=identity) and you preserve the vertical position while adjusting the horizontal(position_dodge), and fill in the bars with the color grey.  
-  geom_bar(stat="identity",color="black")+
-  #Make an error bar that represents the standard error within the data and place the error bars at position 0.9 and make them 0.2 wide.
-  #Label the x-axis "Treatment"
-  xlab("Deer Exclusure Treatment")+
-  #Label the y-axis "Species Richness"
-  ylab(bquote("Species Richness (per 900" *~m^2*")"))+
-  scale_fill_manual(values=c("white","lightcyan2", "cadetblue4","darkslategrey"), labels=c("Non-Leguminous Forb","Graminoid","Legume","Woody"))+
-  scale_x_discrete(labels=c("inside"="Deer Exclusion","outside"="Control"))+
-  theme(legend.key = element_rect(size=4), legend.key.size = unit(1.0,"centimeters"))+
-  facet_wrap(~Burn_Regime_Labels)+
-  #Make the y-axis extend to 50
-  expand_limits(y=50)+
-  theme(strip.background = element_blank(), panel.border = element_rect(), strip.text.x = element_text(size=40), strip.text.y = element_text(size=40))+
-  guides(fill=guide_legend(title="Functional Group"))+
-  theme(legend.title = element_text(size = 30), legend.position = c(0.15,0.92))
-#Save at the graph at 1400x1500
-
-
-
-##Supplementary Table 1 -Make a new data table called "Species_Table" using data from "Extra_Species_Richness"
-Species_Table <- Extra_Species_Identity %>%
-  #Make a new column named "Location" change exclosure data to "Outside Fence" and "Inside Fence"
-  mutate(Location=ifelse(exclosure=="outside", "Outside Fence", "Inside Fence"))%>%
-  #Make a new column named "Treatment" and paste Watershed and Location together, separating them with a dash
-  mutate(Treatment=paste(Fire_Regime,Location, sep = "-"))%>%
-  #Keep only the columns taxa, Species_Presence and Treatment
-  select(taxa,Species_Presence,Treatment)%>%
-  #Delete all rows that are not unique
-  unique()%>%
-  #Make a wide data frame where the treatments are the column headers and taxa are rows and the values are filled with information from "Species_Presence".  If there is no information from "Species_Presence" then fill that cell with a zero
-  spread(key = Treatment, value=Species_Presence, fill=0)
-#Write a csv file onto the computer
-write.csv(Species_Table, file = "Species_Table.csv")
-
-
-####Sublot Level Species Richness and Evenness####
+#### Figure 2 Sublot Level Species Richness and Evenness####
 
 
 ###Calculate Relative Cover###
@@ -252,8 +163,6 @@ Relative_Cover<-Deer_Exclosure_Spp_Name%>%
 Avg_Relative_Cover<-Relative_Cover%>%
   group_by(exclosure,plot,taxa,Fire_Regime)%>%
   summarise(Avg_Relative_Cover=mean(Relative_Cover))
-
-
 
 ###Calculate Richness For Graph###
 
@@ -291,7 +200,7 @@ Wide_Relative_Cover<-Relative_Cover%>%
   spread(key=taxa,value=Avg_Relative_Cover, fill=0)
 
 
-####Evar - Smith and Wilson's Evenness Index####
+## Evar - Smith and Wilson's Evenness Index ##
 
 ###For Statistical Analysis###
 #Make a new data frame called Community_Metrics and run Evar on the Relative_Cover data
@@ -306,7 +215,7 @@ Community_Metrics_LMER<-community_structure(Relative_Cover,replicate.var = "Plot
 
 
 
-#Watershed, exlosure, subplot, and fire regime must all be stored as factors in order to be considered as that - when you store them as numbers R assumes that they are in a specific order (i.e. 2 is inbetween 1 and 3), when you store them as characters R does not know what to do with them -- this is why our code was not working before. 
+#Watershed, exlosure, subplot, and fire regime must all be stored as factors in order to be considered as that - when you store them as numbers R assumes that they are in a specific order (i.e. 2 is inbetween 1 and 3), when you store them as characters R does not know what to do with them
 Community_Metrics_LMER$Watershed_Fact=as.factor(Community_Metrics_LMER$Watershed)
 Community_Metrics_LMER$exclosure_Fact=as.factor(Community_Metrics_LMER$exclosure)
 Community_Metrics_LMER$subplot_Fact=as.factor(Community_Metrics_LMER$plot)
@@ -318,12 +227,14 @@ Community_Metrics_LMER$Watershed.Plot.Fact_=as.factor(Community_Metrics_LMER$Wat
 
 
 
-#LME4
+#LME4 - Sublot Level Species Richness and Evenness
 
-#Give the summary of a new data frame called Mixed_Model_Richness and preform the mixed model function"lmer' using richness, exclosure, and fire regime as fixed effects.  Then use exlosure nested within watershed as a random effect.  Then run an anova -- online research suggests that LME4 is better for Generalized Mixed Models and NLME is better for linear mixed models -- Karin uses LME4 almost exclusively, she said that she understands the ins and outs of it better - when we were working on it the other day both the NLME package and the LME4 code come back with similar results, in which Fire regime was significant but exclosure was not.  Today, the code is giving me non-significant responses for the NLME but I havent figured out why yet -- Karin says this is becuase they are currently testing slightly different things because of what we imput
+#Give the summary of a new data frame called Mixed_Model_Richness and preform the mixed model function"lmer' using richness, exclosure, and fire regime as fixed effects.  Then use exlosure nested within watershed as a random effect.  Then run an anova 
+#Richness
 summary (Mixed_Model_Richness <- lmer(richness ~ exclosure_Fact*Fire_Regime_Fact + (1 | Watershed_Fact/exclosure_Fact), data = Community_Metrics_LMER))
 anova(Mixed_Model_Richness)
 
+#Evenness
 summary (Mixed_Model_Evenness <- lmer(Evar ~ exclosure_Fact*Fire_Regime_Fact + (1 | Watershed_Fact/exclosure_Fact), data = Community_Metrics_LMER))
 anova(Mixed_Model_Evenness)
 
@@ -399,7 +310,7 @@ print(Evar_Plot,vp=viewport(layout.pos.row=1, layout.pos.col =2))
 
 
 
-#####Functional Group#####
+#### Figure 4, appendix S7 - Functional Group ####
 
 Functional_Group_Cover<-Relative_Cover%>%
   group_by(Watershed,exclosure,plot,functional_group)%>%
@@ -409,6 +320,8 @@ Functional_Group_Cover<-Relative_Cover%>%
 Functional_Group_Cover$Fire_Regime_Fact=as.factor(Functional_Group_Cover$Fire_Regime)
 Functional_Group_Cover$Watershed_Fact=as.factor(Functional_Group_Cover$Watershed)
 Functional_Group_Cover$exclosure_Fact=as.factor(Functional_Group_Cover$exclosure)
+
+#Appendix S7
 
 summary (Graminoid_Mixed_Model_Richness <- lmer(FG_Relative_Cover ~ exclosure_Fact*Fire_Regime_Fact + (1 | Watershed_Fact/exclosure_Fact), data = subset(Functional_Group_Cover,functional_group=="graminoid")))
 anova(Graminoid_Mixed_Model_Richness)
@@ -428,9 +341,10 @@ FG_Cover_Summary<-Functional_Group_Cover%>%
   mutate(Richness_St_Error=Richness_Std/sqrt(Richness_n))
 
 
+#Figure 4
 ## Make a bar graph of Functional group species richness and evenness## --find a way to add back in the one woody species for richness
 
-#Figure 2a - Make a dataframe called Species_Richness_Plot using gglpot2.  Use data from Diversity_Summary, making the x-axis Watershed, and y-axis Richness_Mean, the bars should be based on exclosures
+#Figure 4a - Make a dataframe called Species_Richness_Plot using gglpot2.  Use data from Diversity_Summary, making the x-axis Watershed, and y-axis Richness_Mean, the bars should be based on exclosures
 FG_Graminoid_Plot<-ggplot(subset(FG_Cover_Summary,functional_group=="graminoid"),aes(x=Fire_Regime,y=Richness_Mean,fill=exclosure))+
   #Make a bar graph where the height of the bars is equal to the data (stat=identity) and you preserve the vertical position while adjusting the horizontal(position_dodge), and outline the bars with the color black.
   geom_bar(stat="identity", position=position_dodge(),color="black")+
@@ -451,7 +365,7 @@ FG_Graminoid_Plot<-ggplot(subset(FG_Cover_Summary,functional_group=="graminoid")
   annotate("text",x=0.93,y=1,label="a. Graminoids",size=15)+
   theme(plot.margin=margin(10,10,10,10,"pt"))
 
-#Figure 2a - Make a dataframe called Species_Richness_Plot using gglpot2.  Use data from Diversity_Summary, making the x-axis Watershed, and y-axis Richness_Mean, the bars should be based on exclosures
+#Figure 4b - Make a dataframe called Species_Richness_Plot using gglpot2.  Use data from Diversity_Summary, making the x-axis Watershed, and y-axis Richness_Mean, the bars should be based on exclosures
 FG_Forb_Plot<-ggplot(subset(FG_Cover_Summary,functional_group=="forb"),aes(x=Fire_Regime,y=Richness_Mean,fill=exclosure))+
   #Make a bar graph where the height of the bars is equal to the data (stat=identity) and you preserve the vertical position while adjusting the horizontal(position_dodge), and outline the bars with the color black.
   geom_bar(stat="identity", position=position_dodge(),color="black")+
@@ -473,7 +387,7 @@ FG_Forb_Plot<-ggplot(subset(FG_Cover_Summary,functional_group=="forb"),aes(x=Fir
   theme(plot.margin=margin(10,10,10,10,"pt"))
 #Figure 2b - Make a dataframe called EQ_Plot using ggplot2.  Use data from Diversity summary, with the x-axis being Watershed, and the y-axis being EQ_Mean, the bars should be based on exclosures
 
-#Figure 2 - Make a figure that has one row and two columns for two graphs
+#Figure 4 - Make a figure that has one row and two columns for two graphs
 pushViewport(viewport(layout=grid.layout(1,2)))
 #print out the viewport plot where the Species_Richness_plot is at position 1,1
 print(FG_Graminoid_Plot,vp=viewport(layout.pos.row=1, layout.pos.col =1))
@@ -484,7 +398,7 @@ print(FG_Forb_Plot,vp=viewport(layout.pos.row=1, layout.pos.col =2))
 
 
 
-#### Figure 4 - Rank Abundance Curves ####
+#### Figure 5 - Rank Abundance Curves ####
 
 
 #Make a new data table called RAC_Mean using data from Relative_Cover - the mean is being taken across all plots for ease of comparison
@@ -566,7 +480,7 @@ RAC_4Outside_Graph<-ggplot(RAC_4Outside,aes(x=Ranks,y=Mean))+
   expand_limits(y=0.5)+
   theme(plot.margin=margin(10,10,10,10,"pt"))
 
-#Figure 4 - Make a figure that has two row and two columns for four graphs
+#Figure 5 - Make a figure that has two row and two columns for four graphs
 pushViewport(viewport(layout=grid.layout(2,2)))
 #print out the viewport plot where the Species_Richness_plot is at position 1,1
 print(RAC_1Inside_Graph,vp=viewport(layout.pos.row=1, layout.pos.col =1))
@@ -580,7 +494,7 @@ print(RAC_4Outside_Graph,vp=viewport(layout.pos.row=2, layout.pos.col =2))
 
 
 
-#### Bray-Curtis NMDS ####
+#### Figure 1 - Bray-Curtis NMDS ####
 
 
 #Update the theme so that legends will have titles (all else is the same as above)
@@ -695,115 +609,96 @@ permutest(Dispersion_Results_Fire_Regime,pairwise = T, permutations = 999)
 Dispersion_Results_Treatment <- betadisper(BC_Distance_Matrix,Wide_Relative_Cover_1$exclosure)
 permutest(Dispersion_Results_Treatment,pairwise = T, permutations = 999)
 
+#### Appendix S5 ####
+#-Make a new data table called "Species_Table" using data from "Extra_Species_Richness"
+Species_Table <- Extra_Species_Identity %>%
+  #Make a new column named "Location" change exclosure data to "Outside Fence" and "Inside Fence"
+  mutate(Location=ifelse(exclosure=="outside", "Outside Fence", "Inside Fence"))%>%
+  #Make a new column named "Treatment" and paste Watershed and Location together, separating them with a dash
+  mutate(Treatment=paste(Fire_Regime,Location, sep = "-"))%>%
+  #Keep only the columns taxa, Species_Presence and Treatment
+  select(taxa,Species_Presence,Treatment)%>%
+  #Delete all rows that are not unique
+  unique()%>%
+  #Make a wide data frame where the treatments are the column headers and taxa are rows and the values are filled with information from "Species_Presence".  If there is no information from "Species_Presence" then fill that cell with a zero
+  spread(key = Treatment, value=Species_Presence, fill=0)
+#Write a csv file onto the computer
+write.csv(Species_Table, file = "Species_Table.csv")
 
-### Supplemental Tables 2-4 - SIMPER ###
+#### Appendix S6- SIMPER ####
 
 #Run a SIMPER test comparing data from the Environment_Matrix, to data from the Species_Matrix grouping by fire regime
 SIMPER <- with(Environment_Matrix,simper(Species_Matrix,Fire_Regime))
 #Print out a summary of the results
 summary(SIMPER)
 
-#### Ritchie 2001 Data ####
-Ritchie_Data_Functional_Group<-read_csv("Ritchie_2001_Study/Ritchie_KNZ_Functional Group Cover_2001.csv",col_types = cols(Block = col_factor(levels = c("4A","K4A", "K4B")), Forbs = col_number(), Grasses = col_number(), Legumes = col_number(),Litter = col_number(), Livecover = col_number(), Succulent = col_number(), Treeshrub = col_number(),Unidentified = col_number(), Vines = col_number()))%>%
-  mutate(Treatment=ifelse(Grazing=="GG","Outside Fence","Inside Fence"))
+#### Appendix S8-S9 Functional Group Richness by Treatment Type ####
 
-#2001 Grasses Bar Graph
-Grasses<-ggplot(Ritchie_Data_Functional_Group,aes(x=Block,y=Grasses,fill=Treatment))+
+#Make a new data frame from "Extra_Species_Identity" to generate richness values for each research area
+Functional_Group_Extra_Species_Richness<-Extra_Species_Identity%>%  
+  select(-Species_Presence)%>%
+  unique()%>%
+  #group data frame by Watershed and exclosure
+  group_by(functional_group,exclosure,Fire_Regime,Watershed)%>%
+  #Make a new column named "Richness" and add the unique number of rows in the column "taxa" according to the groupings
+  summarise(Richness=length(taxa))%>%
+  #stop grouping by watershed and exclosure
+  ungroup()%>%
+  #group data by exclosure, fire regime and functional group
+  group_by(exclosure,Fire_Regime,functional_group)%>%
+  #add new column averaging the richness column by groupings
+  summarize(Avg_Richness=mean(Richness))
+
+
+#Make a new data table using data from "Functional_Group_Extra_Species_Richness"
+Functional_Group_Extra_Species_Richness_Summary<-Functional_Group_Extra_Species_Richness%>%
+  #Group data by the columns "Watershed" and "exclosure"
+  group_by(exclosure,functional_group,Fire_Regime)%>%
+  #In this data frame, summarize the data.  Make a new column named "Richness_Std" and calculate the standard deviation from the column "Richness".  Also calculate the mean and length from the column "Richness" and place them into their own columns.
+  summarize(Richness_Std=sd(Avg_Richness),Richness_Mean=mean(Avg_Richness),Richness_n=length(Avg_Richness))%>%
+  #Make a new column called "Richness_St_Error" and divide "Richness_Std" by the square root of "Richness_n"
+  mutate(Richness_St_Error=Richness_Std/sqrt(Richness_n))%>%
+  mutate(Burn_Regime_Labels=ifelse(Fire_Regime=="Annual","Annual Burn Regime","Four year Burn Regime"))
+
+
+#Appendix S8
+## T-test comparing research area level species richness across exclosure treatments, using burn regimes as replicates ##
+#Graminoids
+Functional_Group_Graminoids<-(subset(Functional_Group_Extra_Species_Richness_Summary,functional_group=="graminoid"))
+t.test(Functional_Group_Graminoids$Richness_Mean~Functional_Group_Graminoids$exclosure)
+t.test(Functional_Group_Graminoids$Richness_Mean~Functional_Group_Graminoids$Fire_Regime)
+
+#Forbs
+Functional_Group_forb<-(subset(Functional_Group_Extra_Species_Richness_Summary,functional_group=="forb"))
+t.test(Functional_Group_forb$Richness_Mean~Functional_Group_forb$exclosure)
+t.test(Functional_Group_forb$Richness_Mean~Functional_Group_forb$Fire_Regime)
+
+#Legumes
+Functional_Group_legume<-(subset(Functional_Group_Extra_Species_Richness_Summary,functional_group=="legume"))
+t.test(Functional_Group_legume$Richness_Mean~Functional_Group_legume$exclosure)
+t.test(Functional_Group_legume$Richness_Mean~Functional_Group_legume$Fire_Regime)
+
+#Woody
+Functional_Group_woody<-(subset(Functional_Group_Extra_Species_Richness_Summary,functional_group=="woody"))
+t.test(Functional_Group_woody$Richness_Mean~Functional_Group_woody$exclosure)
+t.test(Functional_Group_woody$Richness_Mean~Functional_Group_woody$Fire_Regime)
+
+##Appendix S9 - Make a bar graph using ggplot2.  Use data from "Functional_Group_Extra_Species_Diversity_Summary".  Change the aesthetics x is equal to the data from "exlosure", and y is equal to the "Richness_Mean"
+ggplot(Functional_Group_Extra_Species_Richness_Summary,aes(x=exclosure,y=Richness_Mean, fill=functional_group, position="stack"))+
   #Make a bar graph where the height of the bars is equal to the data (stat=identity) and you preserve the vertical position while adjusting the horizontal(position_dodge), and fill in the bars with the color grey.  
-  #geom_bar(stat="identity", position=position_dodge())+
-  geom_bar(stat="identity", position=position_dodge(),color=("black"))+
+  geom_bar(stat="identity",color="black")+
+  #Make an error bar that represents the standard error within the data and place the error bars at position 0.9 and make them 0.2 wide.
   #Label the x-axis "Treatment"
-  xlab("Watershed")+
+  xlab("Deer Exclusure Treatment")+
   #Label the y-axis "Species Richness"
-  ylab("Grasses")+
+  ylab(bquote("Species Richness (per 900" *~m^2*")"))+
+  scale_fill_manual(values=c("white","lightcyan2", "cadetblue4","darkslategrey"), labels=c("Non-Leguminous Forb","Graminoid","Legume","Woody"))+
+  scale_x_discrete(labels=c("inside"="Deer Exclusion","outside"="Control"))+
+  theme(legend.key = element_rect(size=4), legend.key.size = unit(1.0,"centimeters"))+
+  facet_wrap(~Burn_Regime_Labels)+
   #Make the y-axis extend to 50
   expand_limits(y=50)+
-  scale_fill_manual(values=c("grey","white"), labels=c("Inside Fence","Outside Fence"))+
-  theme(legend.position="none")+
-  theme(axis.title.x=element_blank(), axis.text.x=element_blank(),axis.ticks.x=element_blank())
-
-#2001 Forbs Bar Graph
-Forbs<-ggplot(Ritchie_Data_Functional_Group,aes(x=Block,y=Forbs,fill=Treatment))+
-  #Make a bar graph where the height of the bars is equal to the data (stat=identity) and you preserve the vertical position while adjusting the horizontal(position_dodge), and fill in the bars with the color grey.  
-  #geom_bar(stat="identity", position=position_dodge())+
-  geom_bar(stat="identity", position=position_dodge(),color=("black"))+
-  #Label the x-axis "Treatment"
-  xlab("Watershed")+
-  #Label the y-axis "Species Richness"
-  ylab("Forbs")+
-  #Make the y-axis extend to 50
-  expand_limits(y=50)+
-  scale_fill_manual(values=c("grey","white"), labels=c("Inside Fence","Outside Fence"))+
-  theme(legend.position=c(0.75,0.85), legend.key.size = unit(2.0, 'lines'))+
-  theme(axis.title.x=element_blank(), axis.text.x=element_blank(),axis.ticks.x=element_blank())
-
-#2001 Legumes Bar Graph
-Legumes<-ggplot(Ritchie_Data_Functional_Group,aes(x=Block,y=Legumes,fill=Treatment))+
-  #Make a bar graph where the height of the bars is equal to the data (stat=identity) and you preserve the vertical position while adjusting the horizontal(position_dodge), and fill in the bars with the color grey.  
-  #geom_bar(stat="identity", position=position_dodge())+
-  geom_bar(stat="identity", position=position_dodge(),color=("black"))+
-  #Label the x-axis "Treatment"
-  xlab("Watershed")+
-  #Label the y-axis "Species Richness"
-  ylab("Legumes")+
-  #Make the y-axis extend to 50
-  expand_limits(y=5)+
-  scale_fill_manual(values=c("grey","white"), labels=c("Inside Fence","Outside Fence"))+
-  theme(legend.position="none")
-
-#2001 Woody Species Bar Graph
-Woody_Species<-ggplot(Ritchie_Data_Functional_Group,aes(x=Block,y=allwood,fill=Treatment))+
-  #Make a bar graph where the height of the bars is equal to the data (stat=identity) and you preserve the vertical position while adjusting the horizontal(position_dodge), and fill in the bars with the color grey.  
-  #geom_bar(stat="identity", position=position_dodge())+
-  geom_bar(stat="identity", position=position_dodge(),color=("black"))+
-  #Label the x-axis "Treatment"
-  xlab("Watershed")+
-  #Label the y-axis "Species Richness"
-  ylab("Woody Species")+
-  #Make the y-axis extend to 50
-  expand_limits(y=5)+
-  scale_fill_manual(values=c("grey","white"), labels=c("Inside Fence","Outside Fence"))+
-  theme(legend.position="none")
-
-#Ritchie Figure - Make a figure that has one row and two columns for two graphs
-pushViewport(viewport(layout=grid.layout(2,2)))
-#print out the viewport plot where the Species_Richness_plot is at position 1,1
-print(Grasses,vp=viewport(layout.pos.row=1, layout.pos.col =1))
-#print out the viewport plot where the Species_Richness_plot is at position 1,2
-print(Woody_Species,vp=viewport(layout.pos.row=2, layout.pos.col =2))
-print(Legumes,vp=viewport(layout.pos.row=2, layout.pos.col =1))
-print(Forbs,vp=viewport(layout.pos.row=1, layout.pos.col =2))
-#Save at 1800 x 1000  
-
-
-#### Deer Density Data ####
-ggplot(Deer_Density_Data,aes(x=Year, y=Density..km2.,fill=Location))+
-  geom_bar(stat = "identity",position = position_dodge())+
-  xlab("Year")+
-  ylab("Density per km^2")+
-  scale_fill_manual(values=c("grey","black"), labels=c("Konza", "Regional"))
-
-ggplot(subset(Deer_Density_Data,location=Regium), aes(x=Year, y=Density..km2.))+
-  geom_bar(stat = "identity",position = position_dodge())+
-  xlab("Year")+
-  ylab("Density per km^2")
-  
-
-ggplot(Deer_Density_Data,aes(x=Year,y=Density..km2.,fill=Location))+
-  geom_line()+
-  xlab("Year")+
-  ylab("Density per km^2")
-
-
-ggplot(Deer_Density_Data,aes(x=Year,y=Density..km2.,fill=Location))+
-  geom_point()+
-  xlab("Year")+
-  ylab("Density per km^2")
-
-
-
-
-
-
-
-
+  theme(strip.background = element_blank(), panel.border = element_rect(), strip.text.x = element_text(size=40), strip.text.y = element_text(size=40))+
+  guides(fill=guide_legend(title="Functional Group"))+
+  theme(legend.title = element_text(size = 30), legend.position = c(0.15,0.92))
+#Save at the graph at 1400x1500
