@@ -3,7 +3,7 @@
 #### Set all general necessities ####
 
 #Set working directory - Bloodworth PC
-setwd("/Users/bloodworthk/Dropbox (Smithsonian)/Konza Prairie/herbivore_removal_plots/deer exclosure resampling/Deer_Exclosure_Resampling_Data")
+setwd("/Users/kjbloodw/Dropbox (Smithsonian)/Projects/Konza Prairie/herbivore_removal_plots/deer exclosure resampling/Deer_Exclosure_Resampling_Data")
 
 #Set working directory- Bloodworth Mac
 setwd("/Users/kathrynbloodworth/Dropbox (Smithsonian)/Projects/Konza Prairie/herbivore_removal_plots/deer exclosure resampling/Deer_Exclosure_Resampling_Data")
@@ -94,7 +94,7 @@ Extra_Species_Richness<-Extra_Species_Identity%>%
   group_by(Treatment,Fire_Regime,exclosure)%>%
   #take the mean of the unique groupings giving the average richness across burn regimes and treatments
   summarize(Richness_Average=mean(Richness))
-  
+
 
 #T-test comparing research area level species richness across exclosure treatments, using burn regimes as replicates
 t.test(Extra_Species_Richness$Richness_Average~Extra_Species_Richness$exclosure)
@@ -158,7 +158,7 @@ Relative_Cover<-Deer_Exclosure_Spp_Name%>%
   mutate(Relative_Cover=cover/Total_Cover)%>%
   #delete column "cover"
   select(-cover)
-  
+
 #Make a new data frame to caluclate the average relative cover for each exclosure and burn regime, left join Relative_Cover
 Avg_Relative_Cover<-Relative_Cover%>%
   group_by(exclosure,plot,taxa,Fire_Regime)%>%
@@ -269,10 +269,10 @@ Species_Richness_Plot<-ggplot(Diversity_Summary,aes(x=as.factor(Fire_Regime),y=R
   #Make the y-axis expand to 20
   expand_limits(y=20)+
   scale_x_discrete(labels=Fire_Regime_Labels)+
-  #Place the legend at 0.8,0.94 and space it out by 3 lines
-  theme(legend.position=c(0.75,0.94), legend.key.size = unit(2.0, 'lines'),legend.title = element_blank())+
-  #Add "a." to the graph in size 10 at position 0.6,20
-  annotate("text",x=0.55,y=20,label="a.",size=20)+
+  #Place the legend at 0.20,0.84 and space it out by 3 lines
+  theme(legend.position=c(0.20,0.84), legend.key.size = unit(2.0, 'lines'),legend.title = element_blank())+
+  #Add "a.Plant Species Richness" to the graph in size 10 at position 0.6,20
+  annotate("text",x=1.14,y=20,label="a. Plant Species Richness",size=12)+
   #Add "A" to the graph in size 6 at position 1,17
   annotate("text",x=1,y=14,label="A",size=15)+
   #Add "B" to the graph in size 6 at position 2,13.5
@@ -297,7 +297,7 @@ Evar_Plot<-ggplot(Diversity_Summary,aes(x=as.factor(Fire_Regime),y=Evar_Mean,fil
   #Expand the y-axis to 1.0
   expand_limits(y=0.5)+
   #add text "b." at 0.6,1.0 in size 10
-  annotate("text",x=.55,y=0.5,label="b.",size=20)+
+  annotate("text",x=1.18,y=0.5,label="b. Plant Species Evenness",size=12)+
   theme(plot.margin=margin(10,10,10,10,"pt"))
 
 #Figure 2 - Make a figure that has one row and two columns for two graphs
@@ -448,7 +448,10 @@ RAC_1Outside_Graph<-ggplot(RAC_1Outside,aes(x=Ranks,y=Mean))+
   #Change the theme so that the boarders and backgrounds are white and the x- and y-axis text size is 24
   theme(strip.background = element_rect(color="white",fill="white"),strip.text.x = element_text(size=28), strip.text.y = element_text(size=28),axis.title.x = element_blank(), axis.title.y=element_blank(),axis.ticks.x = element_blank(), axis.ticks.y = element_blank(),axis.text.y = element_blank(),axis.text.x = element_blank())+
   expand_limits(y=0.5)+
-  labs(title="Control")
+  axis.title.y.right = element_text("Annual Burn Regime")+
+  axis.title.x.top = element_text("Control")
+  
+
 
 RAC_4Inside <- subset(RAC_Mean,Treatment=="Four year Burn Regime.inside")
 #Made plot using data from RAC_Mean with x being "Ranks" and y being "Mean"
@@ -478,7 +481,8 @@ RAC_4Outside_Graph<-ggplot(RAC_4Outside,aes(x=Ranks,y=Mean))+
   #Change the theme so that the boarders and backgrounds are white and the x- and y-axis text size is 24
   theme(strip.background = element_rect(color="white",fill="white"),strip.text.x = element_text(size=28), strip.text.y = element_text(size=28),axis.title.y = element_blank(), axis.ticks.y = element_blank(),axis.text.y = element_blank(),axis.title.x = element_text(size=30))+
   expand_limits(y=0.5)+
-  theme(plot.margin=margin(10,10,10,10,"pt"))
+  theme(plot.margin=margin(10,10,10,10,"pt"))+
+  axis.title.y.right = element_text("Four year Burn Regime")
 
 #Figure 5 - Make a figure that has two row and two columns for four graphs
 pushViewport(viewport(layout=grid.layout(2,2)))
